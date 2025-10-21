@@ -196,7 +196,7 @@ body.ck44-locked > *:not(#ck44-sec-overlay){display:none !important}
       };
       frame.src = base + paths[platform];
       frame.style.display = 'block';
-      frame.onerror = () => {frame.style.display='none';alert('⚠️ Planner gagal dimuat. Pastikan file HTML ada di folder /assets/planners/');};
+      frame.onerror = () => {frame.style.display='none';alert('⚠️ Planner gagal dimuat. Pastikan file HTML ada di folder /public/assets/planners_encrypted/');};
       closeBtn.style.display = 'block';
     }
 
