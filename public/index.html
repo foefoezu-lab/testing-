@@ -123,8 +123,31 @@
       z-index: 5;
     }
   </style>
+
+<style id="ck44-sec-style">
+#ck44-sec-overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.78);z-index:99999;font-family:Poppins,system-ui;}
+#ck44-sec-card{width:min(440px,92vw);background:linear-gradient(180deg,#14100a,#0f0d08);border:1px solid rgba(255,215,0,0.12);padding:22px;border-radius:14px;color:#ffe8a6;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+#ck44-sec-card h2{margin:0 0 6px;font-family:Orbitron,Poppins;color:#ffd96a}
+#ck44-sec-card p{margin:0 0 12px;color:#d9c88f;font-size:14px}
+#ck44-sec-card input{width:100%;padding:10px 12px;margin:8px 0;border-radius:10px;background:#0e0c05;border:1px solid #3b2a10;color:#fff9e8}
+#ck44-sec-card .btn{width:100%;padding:10px;border-radius:10px;border:1px solid #5a420f;background:linear-gradient(90deg,#604000,#ffcc33);color:#1a1204;font-weight:700;cursor:pointer}
+#ck44-sec-lockmsg{color:#ffb4b4;min-height:18px;margin-top:8px;font-size:13px}
+body.ck44-locked > *:not(#ck44-sec-overlay){display:none !important}
+</style>
+
 </head>
 <body>
+<div id="ck44-sec-overlay" style="display:none" aria-hidden="true">
+  <div id="ck44-sec-card" role="dialog" aria-label="CK44 Secure Login">
+    <h2>CK44 Secure Access</h2>
+    <p>Masukkan kredensial untuk mengakses dashboard.</p>
+    <input id="ck44-sec-user" type="text" placeholder="username" autocomplete="username" />
+    <input id="ck44-sec-pass" type="password" placeholder="password" autocomplete="current-password" />
+    <div id="ck44-sec-lockmsg"></div>
+    <button id="ck44-sec-btn" class="btn">Unlock Dashboard</button>
+  </div>
+</div>
+
   <canvas id="goldRain"></canvas>
 
   <header>
@@ -159,7 +182,7 @@
     function openPlanner(platform) {
       const frame = document.getElementById('plannerFrame');
       const closeBtn = document.getElementById('closeBtn');
-      const base = '/assets/planners/'; // fixed for vercel absolute path
+      const base = '/public/assets/planners_encrypted/'; // fixed for vercel absolute path
       const paths = {
         Instagram: 'CK44_Instagram_30Day_Planner_GoldIntense.html',
         LinkedIn: 'CK44_LinkedIn_30Day_Planner_GoldIntense.html',
@@ -218,53 +241,47 @@
     animate();
   </script>
 
-<script>
-// === CK44 Level 3 Decrypt Loader (AES‑256‑GCM + PBKDF2) ===
+<script id="ck44-sec-script">
 (function(){
-  const P1="TA",P2="KA",P3="ALL",P4="IANCE_2025";
-  const PASSWORD = (P1+P2+P3+P4); // TAKAALLIANCE_2025
+  const USER = "martinganteng";
+  const PASS = "martinterkece";
+  const EXP_MIN = 30;
+  const OVERLAY = document.getElementById('ck44-sec-overlay');
+  const LOCKMSG = document.getElementById('ck44-sec-lockmsg');
 
-  function b64ToBytes(b64){const bin=atob(b64.trim());const len=bin.length;const bytes=new Uint8Array(len);for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);return bytes;}
-  async function importKey(password,salt){
-    const enc = new TextEncoder();
-    const mat = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
-    return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:120000, hash:"SHA-256"},
-                                   mat, {name:"AES-GCM", length:256}, false, ["decrypt"]);
-  }
-  async function decryptB64(b64){
-    const buf = b64ToBytes(b64);
-    const salt = buf.slice(0,16);
-    const iv   = buf.slice(16,28);
-    const data = buf.slice(28, buf.length-16);
-    const tag  = buf.slice(buf.length-16);
-    // WebCrypto AES-GCM expects tag appended to ciphertext; most browsers accept as-is
-    const key = await importKey(PASSWORD, salt);
-    const full = new Uint8Array(data.length + tag.length);
-    full.set(data,0); full.set(tag,data.length);
-    const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, full);
-    return new TextDecoder().decode(new Uint8Array(plain));
-  }
+  function now(){return Date.now();}
+  function isValidSession(){ try{ const flag = sessionStorage.getItem('ck44_auth'); if(!flag) return false; const exp = Number(sessionStorage.getItem('ck44_exp')||0); return now() < exp; }catch(e){return false;} }
+  function setSession(){ sessionStorage.setItem('ck44_auth','ok'); sessionStorage.setItem('ck44_exp', String(now() + EXP_MIN*60*1000)); }
+  function clearSession(){ sessionStorage.removeItem('ck44_auth'); sessionStorage.removeItem('ck44_exp'); }
+  function showOverlay(msg){ if(OVERLAY){ OVERLAY.style.display='grid'; OVERLAY.setAttribute('aria-hidden','false'); document.body.classList.add('ck44-locked'); if(msg) LOCKMSG.textContent = msg; } }
+  function hideOverlay(){ if(OVERLAY){ OVERLAY.style.display='none'; OVERLAY.setAttribute('aria-hidden','true'); document.body.classList.remove('ck44-locked'); LOCKMSG.textContent=''; } }
 
-  // Override openPlanner to use encrypted files
-  window.openPlanner = async function(platform){
-    const frame = document.getElementById('plannerFrame');
-    const closeBtn = document.getElementById('closeBtn');
-    try{
-      const url = '/assets/planners_encrypted/' + platform.toLowerCase() + '.enc';
-      const r = await fetch(url);
-      if(!r.ok) throw new Error('notfound');
-      const b64 = await r.text();
-      const html = await decryptB64(b64);
-      const blob = new Blob([html], {type:'text/html'});
-      const objUrl = URL.createObjectURL(blob);
-      frame.src = objUrl;
-      frame.style.display = 'block';
-      if (closeBtn) closeBtn.style.display = 'block';
-    }catch(e){
-      alert(e.message==='notfound' ? '⚠️ File terenkripsi tidak ditemukan: ' + platform :
-                                     '⚠️ Gagal membuka planner terenkripsi untuk ' + platform);
-    }
-  };
+  document.addEventListener('DOMContentLoaded', function(){ if(!isValidSession()) showOverlay(''); else hideOverlay(); });
+
+  document.addEventListener('click', function(e){ if(e.target && e.target.id === 'ck44-sec-btn'){ const u = document.getElementById('ck44-sec-user').value.trim(); const p = document.getElementById('ck44-sec-pass').value; if(u===USER && p===PASS){ setSession(); hideOverlay(); location.reload(); } else { LOCKMSG.textContent='Login gagal — coba lagi.'; setTimeout(()=>{LOCKMSG.textContent='';},3000);} } });
+
+  document.getElementById('ck44-sec-pass')?.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('ck44-sec-btn').click(); });
+
+  setInterval(function(){ if(!isValidSession()){ clearSession(); showOverlay('Sesi habis. Silakan login ulang.'); } }, 5000);
+
+  // Anti-inspect measures
+  window.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  window.addEventListener('keydown', function(e){
+    if(e.key==='F12'){ e.preventDefault(); showOverlay('Devtools dilarang.'); }
+    if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())){ e.preventDefault(); showOverlay('Devtools dilarang.'); }
+    if(e.ctrlKey && ['U','S','P'].includes(e.key.toUpperCase())){ e.preventDefault(); showOverlay('Tindakan dilarang.'); }
+  }, true);
+
+  var devtools_open = false;
+  function detectDevTools(){ const threshold=160; const isOpen = window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold; if(isOpen && !devtools_open){ devtools_open=true; showOverlay('Devtools terdeteksi — akses dibatasi.'); } if(!isOpen && devtools_open){ devtools_open=false; if(isValidSession()) hideOverlay(); } }
+  setInterval(detectDevTools, 1000);
+
+  document.addEventListener('visibilitychange', function(){ if(document.hidden){ const f = document.getElementById('plannerFrame'); if(f){ f.dataset._src = f.src; f.src='about:blank'; } } else { const f = document.getElementById('plannerFrame'); if(f && f.dataset._src){ f.src=f.dataset._src; delete f.dataset._src; } } });
+
+  document.addEventListener('mousedown', function(e){ if(e.button===2) e.preventDefault(); }, true);
+
+  try{ const element = new Image(); Object.defineProperty(element,'id',{ get:function(){ showOverlay('Devtools terdeteksi — akses dibatasi.'); throw new Error('Devtools detected'); } }); console.log(element); }catch(e){}
+
 })();
 </script>
 
