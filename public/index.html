@@ -126,25 +126,20 @@
   <!-- Toolbar -->
   <div class="nav">
     <button class="btn" onclick="loadEncrypted('instagram')">Instagram</button>
+    <button class="btn" onclick="loadEncrypted('linkedin')">LinkedIn</button>
     <button class="btn" onclick="loadEncrypted('tiktok')">TikTok</button>
     <button class="btn" onclick="loadEncrypted('threads')">Threads</button>
     <button class="btn" onclick="loadEncrypted('reddit')">Reddit</button>
     <button class="btn" onclick="loadEncrypted('medium')">Medium</button>
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
-    <button class="btn" onclick="loadEncrypted('linkedin')">LinkedIn</button>
+    
   </div>
   
 
   <!-- Viewer Panel -->
   <div class="panel">
-    <iframe
-  id="viewer"
-  allow="fullscreen; autoplay; clipboard-read; clipboard-write; encrypted-media; geolocation *; microphone *; camera *"
-  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-  referrerpolicy="no-referrer"
-  allowfullscreen>
-</iframe>
+  <iframe id="viewer" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
 
 
   </div>
