@@ -1,0 +1,16 @@
+# CK44 GoldRain Level 4 — FULL (Encrypted planners)
+Index: index.html (berisi login + anti-inspect).
+Folder planners terenkripsi: assets/planners_encrypted/*.enc
+Password dekripsi runtime: TAKAALLIANCE_2025 (dipecah di script halaman).
+
+Status:
+{
+  "instagram": "ENC_OK",
+  "linkedin": "ENC_OK",
+  "tiktok": "ENC_OK",
+  "threads": "ENC_OK",
+  "reddit": "ENC_OK",
+  "medium": "ENC_OK",
+  "x": "ENC_OK",
+  "youtube": "ENC_OK"
+}
