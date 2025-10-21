@@ -134,10 +134,17 @@
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
   </div>
+  
 
   <!-- Viewer Panel -->
   <div class="panel">
-    <iframe id="viewer" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+   <iframe 
+  id="viewer"
+  allow="fullscreen; autoplay; clipboard-read; clipboard-write; encrypted-media; geolocation *; microphone *; camera *"
+  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+  referrerpolicy="no-referrer"
+  allowfullscreen
+></iframe>
 
   </div>
 
