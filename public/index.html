@@ -250,7 +250,7 @@
     const frame = document.getElementById('plannerFrame');
     const closeBtn = document.getElementById('closeBtn');
     try{
-      const url = '/public/assets/planners_encrypted/' + platform.toLowerCase() + '.enc';
+      const url = '/assets/planners_encrypted/' + platform.toLowerCase() + '.enc';
       const r = await fetch(url);
       if(!r.ok) throw new Error('notfound');
       const b64 = await r.text();
