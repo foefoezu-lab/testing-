@@ -138,13 +138,14 @@
 
   <!-- Viewer Panel -->
   <div class="panel">
-   <iframe
+    <iframe
   id="viewer"
   allow="fullscreen; autoplay; clipboard-read; clipboard-write; encrypted-media; geolocation *; microphone *; camera *"
-  sandbox="allow-same-origin allow-popups allow-forms"
+  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
   referrerpolicy="no-referrer"
   allowfullscreen>
 </iframe>
+
 
   </div>
 
@@ -231,11 +232,20 @@ async function loadEncrypted(name){
   }
   if(!b64){ alert('File terenkripsi tidak ditemukan di /assets atau /public/assets.'); return; }
   try{
-    const html=await decryptB64(b64);
-    const blob=new Blob([html],{type:'text/html'});
-    const url=URL.createObjectURL(blob);
-    const frame=document.getElementById('viewer');
-    frame.src=url;
+    const html = await decryptB64(b64);
+const frame = document.getElementById('viewer');
+
+// coba injeksi langsung ke iframe srcdoc agar bypass sandbox tanpa allow-scripts
+frame.removeAttribute('src');
+frame.srcdoc = html;
+
+// fallback jika srcdoc tidak didukung
+if (!frame.srcdoc) {
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  frame.src = url;
+}
+
   }catch(e){ alert('Dekripsi gagal. Pastikan kunci dan file valid.'); }
 }
 </script>
