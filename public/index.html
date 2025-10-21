@@ -1,289 +1,184 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAKA ALLIANCE – GoldRain Master Edition</title>
-  <link rel="icon" type="image/png" href="assets/logo.png">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at center, #1a0f00 0%, #000000 100%);
-      overflow: hidden;
-      height: 100vh;
-      font-family: 'Poppins', sans-serif;
-      color: #ffd700;
-    }
-
-    /* Efek hujan emas */
-    canvas#goldRain {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Header */
-    header {
-      position: relative;
-      text-align: center;
-      padding-top: 25px;
-      z-index: 5;
-    }
-
-    header h1 {
-      font-size: 2.3em;
-      font-weight: 700;
-      color: #ffde6b;
-      text-shadow: 0 0 25px #caa91a;
-    }
-
-    /* Tombol navigasi */
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-      z-index: 5;
-      position: relative;
-    }
-
-    .nav-buttons button {
-      background: rgba(255, 215, 0, 0.1);
-      border: 1px solid rgba(255, 215, 0, 0.5);
-      color: #ffde6b;
-      font-weight: 600;
-      padding: 10px 18px;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .nav-buttons button:hover {
-      background: rgba(255, 215, 0, 0.3);
-      transform: translateY(-3px);
-    }
-
-    /* Iframe center */
-    iframe#plannerFrame {
-       position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAKA ALLIANCE — GoldRain Master Edition</title>
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at center, #0a0a0a, #000);
+  color: gold;
+  font-family: "Poppins", sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+h1 {
+  text-align: center;
+  color: gold;
+  text-shadow: 0 0 20px gold;
+}
+#loginBox, #dashboard { display: none; }
+button {
+  background: rgba(255,215,0,0.1);
+  border: 1px solid gold;
+  color: gold;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+button:hover { background: rgba(255,215,0,0.3); }
+#plannerFrame {
+  width: 95%;
   height: 80vh;
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 20px;
-  background: rgba(20, 20, 20, 0.98); /* Hampir hitam solid */
-  backdrop-filter: none;              /* Matikan blur */
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-  display: none;
-  z-index: 5;
-    }
-
-    /* Tombol Close */
-    #closeBtn {
-      position: fixed;
-      top: 18px;
-      right: 22px;
-      background: rgba(255, 215, 0, 0.15);
-      border: 1px solid rgba(255, 215, 0, 0.5);
-      color: #ffd700;
-      font-weight: bold;
-      font-size: 1.2em;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      cursor: pointer;
-      z-index: 999;
-      display: none;
-      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    #closeBtn:hover {
-      background: rgba(255, 215, 0, 0.4);
-      transform: scale(1.05);
-    }
-
-    footer {
-      position: fixed;
-      bottom: 15px;
-      text-align: center;
-      width: 100%;
-      color: #caa91a;
-      font-size: 0.9em;
-      z-index: 5;
-    }
-  </style>
-
-<style id="ck44-sec-style">
-#ck44-sec-overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.78);z-index:99999;font-family:Poppins,system-ui;}
-#ck44-sec-card{width:min(440px,92vw);background:linear-gradient(180deg,#14100a,#0f0d08);border:1px solid rgba(255,215,0,0.12);padding:22px;border-radius:14px;color:#ffe8a6;box-shadow:0 18px 40px rgba(0,0,0,.6)}
-#ck44-sec-card h2{margin:0 0 6px;font-family:Orbitron,Poppins;color:#ffd96a}
-#ck44-sec-card p{margin:0 0 12px;color:#d9c88f;font-size:14px}
-#ck44-sec-card input{width:100%;padding:10px 12px;margin:8px 0;border-radius:10px;background:#0e0c05;border:1px solid #3b2a10;color:#fff9e8}
-#ck44-sec-card .btn{width:100%;padding:10px;border-radius:10px;border:1px solid #5a420f;background:linear-gradient(90deg,#604000,#ffcc33);color:#1a1204;font-weight:700;cursor:pointer}
-#ck44-sec-lockmsg{color:#ffb4b4;min-height:18px;margin-top:8px;font-size:13px}
-body.ck44-locked > *:not(#ck44-sec-overlay){display:none !important}
+  margin: 20px auto;
+  border: 1px solid gold;
+  display: block;
+}
 </style>
-
 </head>
 <body>
-<div id="ck44-sec-overlay" style="display:none" aria-hidden="true">
-  <div id="ck44-sec-card" role="dialog" aria-label="CK44 Secure Login">
-    <h2>CK44 Secure Access</h2>
-    <p>Masukkan kredensial untuk mengakses dashboard.</p>
-    <input id="ck44-sec-user" type="text" placeholder="username" autocomplete="username" />
-    <input id="ck44-sec-pass" type="password" placeholder="password" autocomplete="current-password" />
-    <div id="ck44-sec-lockmsg"></div>
-    <button id="ck44-sec-btn" class="btn">Unlock Dashboard</button>
-  </div>
+<h1>TAKA ALLIANCE — GoldRain Master Edition</h1>
+
+<div id="loginBox" style="text-align:center;margin-top:100px;">
+  <h2>Login Access</h2>
+  <input id="username" placeholder="Username"><br><br>
+  <input id="password" placeholder="Password" type="password"><br><br>
+  <button onclick="checkLogin()">Login</button>
+  <p id="loginStatus"></p>
 </div>
 
-  <canvas id="goldRain"></canvas>
+<div id="dashboard" style="text-align:center;">
+  <h2>Platform Selection</h2>
+  <div>
+    <button onclick="loadEncryptedPlanner('instagram')">Instagram</button>
+    <button onclick="loadEncryptedPlanner('linkedin')">LinkedIn</button>
+    <button onclick="loadEncryptedPlanner('tiktok')">TikTok</button>
+    <button onclick="loadEncryptedPlanner('threads')">Threads</button>
+    <button onclick="loadEncryptedPlanner('reddit')">Reddit</button>
+    <button onclick="loadEncryptedPlanner('medium')">Medium</button>
+    <button onclick="loadEncryptedPlanner('x')">X (Twitter)</button>
+    <button onclick="loadEncryptedPlanner('youtube')">YouTube</button>
+  </div>
+  <iframe id="plannerFrame"></iframe>
+  <br>
+  <button onclick="logout()">Logout</button>
+</div>
 
-  <header>
-    <h1>TAKA ALLIANCE</h1>
-    <p>GoldRain Master Edition Dashboard</p>
-    <div class="nav-buttons">
-      <button onclick="openPlanner('Instagram')">Instagram</button>
-      <button onclick="openPlanner('LinkedIn')">LinkedIn</button>
-      <button onclick="openPlanner('TikTok')">TikTok</button>
-      <button onclick="openPlanner('Threads')">Threads</button>
-      <button onclick="openPlanner('Reddit')">Reddit</button>
-      <button onclick="openPlanner('Medium')">Medium</button>
-      <button onclick="openPlanner('X')">X (Twitter)</button>
-      <button onclick="openPlanner('YouTube')">YouTube</button>
-      <button onclick="openPlanner('Premium_Panel')">Premium Panel</button>
-    </div>
-  </header>
+<script>
+// =============================
+// Anti-Inspect & Security
+// =============================
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = e => {
+  if (e.keyCode == 123) return false; // F12
+  if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) return false;
+  if (e.ctrlKey && e.key.toUpperCase() === 'U') return false;
+};
 
-  <iframe id="plannerFrame" sandbox="allow-same-origin allow-scripts allow-popups" allow="same-origin allow-scripts allow-popups"></iframe>
-  <button id="closeBtn" onclick="closePlanner()">✕</button>
+// =============================
+// Login System
+// =============================
+const USER = "martinganteng";
+const PASS = "martinterkece";
+const EXP_MIN = 30;
 
-  <footer>© 2025 TAKA ALLIANCE — GoldRain Master Edition</footer>
+function checkLogin(){
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  if(u===USER && p===PASS){
+    localStorage.setItem("taka_session", Date.now() + EXP_MIN*60*1000);
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+  } else {
+    document.getElementById("loginStatus").innerText="❌ Invalid login";
+  }
+}
 
-  <script>
-    function closePlanner() {
-      const frame = document.getElementById('plannerFrame');
-      const closeBtn = document.getElementById('closeBtn');
-      frame.style.display = 'none';
-      closeBtn.style.display = 'none';
-    }
+function checkSession(){
+  const t = localStorage.getItem("taka_session");
+  if(!t || Date.now()>t){
+    localStorage.removeItem("taka_session");
+    document.getElementById("loginBox").style.display="block";
+    document.getElementById("dashboard").style.display="none";
+  } else {
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+  }
+}
+checkSession();
 
-    function openPlanner(platform) {
-      const frame = document.getElementById('plannerFrame');
-      const closeBtn = document.getElementById('closeBtn');
-      const base = '/public/assets/planners_encrypted/'; // fixed for vercel absolute path
-      const paths = {
-        Instagram: 'CK44_Instagram_30Day_Planner_GoldIntense.html',
-        LinkedIn: 'CK44_LinkedIn_30Day_Planner_GoldIntense.html',
-        TikTok: 'CK44_TikTok_30Day_Planner_GoldIntense.html',
-        Threads: 'CK44_Threads_30Day_Planner_GoldIntense.html',
-        Reddit: 'CK44_Reddit_30Day_Planner_GoldIntense.html',
-        Medium: 'CK44_Medium_Planner_1_GoldIntense.html',
-        X: 'CK44_X_30Day_Planner_GoldIntense.html',
-        YouTube: 'CK44_YouTube_30Day_Planner_GoldIntense.html',
-        Premium_Panel: 'CK44_Premium_Panel_Popup_GoldRain.html'
-      };
-      frame.src = base + paths[platform];
-      frame.style.display = 'block';
-      frame.onerror = () => {frame.style.display='none';alert('⚠️ Planner gagal dimuat. Pastikan file HTML ada di folder /public/assets/planners_encrypted/');};
-      closeBtn.style.display = 'block';
-    }
+function logout(){
+  localStorage.removeItem("taka_session");
+  location.reload();
+}
 
-    // Efek hujan emas
-    const canvas = document.getElementById("goldRain");
-    const ctx = canvas.getContext("2d");
-    let particles = [];
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener("resize", resize);
-    resize();
+// =============================
+// AES-GCM Decryption Runtime
+// =============================
+function b64ToBytes(b64){
+  const bin = atob(b64.trim());
+  const len = bin.length;
+  const bytes = new Uint8Array(len);
+  for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+  return bytes;
+}
+async function importKeyFromPassword(password,salt){
+  const enc = new TextEncoder();
+  const keyMat = await crypto.subtle.importKey("raw",enc.encode(password),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2",salt,iterations:120000,hash:"SHA-256"},
+    keyMat,{name:"AES-GCM",length:256},false,["decrypt"]);
+}
+async function decryptB64(b64){
+  const buf = b64ToBytes(b64);
+  const salt = buf.slice(0,16);
+  const iv   = buf.slice(16,28);
+  const data = buf.slice(28, buf.length-16);
+  const tag  = buf.slice(buf.length-16);
+  const ctTag = new Uint8Array(data.length+tag.length);
+  ctTag.set(data,0); ctTag.set(tag,data.length);
+  const key = await importKeyFromPassword("TAKAALLIANCE_2025",salt);
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM",iv},key,ctTag);
+  return new TextDecoder().decode(new Uint8Array(plain));
+}
 
-    function createParticles() {
-      for (let i = 0; i < 120; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 2,
-          speed: 0.5 + Math.random() * 1.2
-        });
+// =============================
+// Auto-detect base path
+// =============================
+async function loadEncryptedPlanner(name){
+  let tryPaths = [
+    `/assets/planners_encrypted/${name}.enc`,
+    `/public/assets/planners_encrypted/${name}.enc`
+  ];
+  let found = null, b64 = null;
+
+  for(let path of tryPaths){
+    try {
+      const res = await fetch(path);
+      if(res.ok){
+        b64 = await res.text();
+        found = path;
+        break;
       }
-    }
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#ffd700";
-      for (let i = 0; i < particles.length; i++) {
-        let p = particles[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        p.y += p.speed;
-        if (p.y > canvas.height) {
-          p.y = -5;
-          p.x = Math.random() * canvas.width;
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-    createParticles();
-    animate();
-  </script>
+    } catch(e){}
+  }
 
-<script id="ck44-sec-script">
-(function(){
-  const USER = "martinganteng";
-  const PASS = "martinterkece";
-  const EXP_MIN = 30;
-  const OVERLAY = document.getElementById('ck44-sec-overlay');
-  const LOCKMSG = document.getElementById('ck44-sec-lockmsg');
+  if(!found){ alert("❌ File not found in any path."); return; }
 
-  function now(){return Date.now();}
-  function isValidSession(){ try{ const flag = sessionStorage.getItem('ck44_auth'); if(!flag) return false; const exp = Number(sessionStorage.getItem('ck44_exp')||0); return now() < exp; }catch(e){return false;} }
-  function setSession(){ sessionStorage.setItem('ck44_auth','ok'); sessionStorage.setItem('ck44_exp', String(now() + EXP_MIN*60*1000)); }
-  function clearSession(){ sessionStorage.removeItem('ck44_auth'); sessionStorage.removeItem('ck44_exp'); }
-  function showOverlay(msg){ if(OVERLAY){ OVERLAY.style.display='grid'; OVERLAY.setAttribute('aria-hidden','false'); document.body.classList.add('ck44-locked'); if(msg) LOCKMSG.textContent = msg; } }
-  function hideOverlay(){ if(OVERLAY){ OVERLAY.style.display='none'; OVERLAY.setAttribute('aria-hidden','true'); document.body.classList.remove('ck44-locked'); LOCKMSG.textContent=''; } }
+  try {
+    const html = await decryptB64(b64);
+    const blob = new Blob([html], {type:"text/html"});
+    const url = URL.createObjectURL(blob);
+    const iframe = document.getElementById("plannerFrame");
+    iframe.src = url;
+  } catch(e){
+    alert("❌ Decryption failed. Wrong key or corrupted file.");
+  }
+}
 
-  document.addEventListener('DOMContentLoaded', function(){ if(!isValidSession()) showOverlay(''); else hideOverlay(); });
-
-  document.addEventListener('click', function(e){ if(e.target && e.target.id === 'ck44-sec-btn'){ const u = document.getElementById('ck44-sec-user').value.trim(); const p = document.getElementById('ck44-sec-pass').value; if(u===USER && p===PASS){ setSession(); hideOverlay(); location.reload(); } else { LOCKMSG.textContent='Login gagal — coba lagi.'; setTimeout(()=>{LOCKMSG.textContent='';},3000);} } });
-
-  document.getElementById('ck44-sec-pass')?.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('ck44-sec-btn').click(); });
-
-  setInterval(function(){ if(!isValidSession()){ clearSession(); showOverlay('Sesi habis. Silakan login ulang.'); } }, 5000);
-
-  // Anti-inspect measures
-  window.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-  window.addEventListener('keydown', function(e){
-    if(e.key==='F12'){ e.preventDefault(); showOverlay('Devtools dilarang.'); }
-    if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())){ e.preventDefault(); showOverlay('Devtools dilarang.'); }
-    if(e.ctrlKey && ['U','S','P'].includes(e.key.toUpperCase())){ e.preventDefault(); showOverlay('Tindakan dilarang.'); }
-  }, true);
-
-  var devtools_open = false;
-  function detectDevTools(){ const threshold=160; const isOpen = window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold; if(isOpen && !devtools_open){ devtools_open=true; showOverlay('Devtools terdeteksi — akses dibatasi.'); } if(!isOpen && devtools_open){ devtools_open=false; if(isValidSession()) hideOverlay(); } }
-  setInterval(detectDevTools, 1000);
-
-  document.addEventListener('visibilitychange', function(){ if(document.hidden){ const f = document.getElementById('plannerFrame'); if(f){ f.dataset._src = f.src; f.src='about:blank'; } } else { const f = document.getElementById('plannerFrame'); if(f && f.dataset._src){ f.src=f.dataset._src; delete f.dataset._src; } } });
-
-  document.addEventListener('mousedown', function(e){ if(e.button===2) e.preventDefault(); }, true);
-
-  try{ const element = new Image(); Object.defineProperty(element,'id',{ get:function(){ showOverlay('Devtools terdeteksi — akses dibatasi.'); throw new Error('Devtools detected'); } }); console.log(element); }catch(e){}
-
-})();
 </script>
-
 </body>
 </html>
