@@ -184,7 +184,7 @@ window.addEventListener('message', (ev)=>{
     authDomain: "taka-alliance.firebaseapp.com",
     databaseURL: "https://taka-alliance-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "taka-alliance",
-    storageBucket: "taka-alliance.firebasestorage.app",
+    storageBucket: "taka-alliance.appspot.com",
     messagingSenderId: "1056890285843",
     appId: "1:1056890285843:web:a840634f72548f1350f4e6",
     measurementId: "G-65ZQJ7DKHF"
@@ -198,6 +198,7 @@ window.addEventListener('message', (ev)=>{
   function iframeWin(){ return document.getElementById('viewer').contentWindow; }
 
   function startBridge(){
+    // Push seluruh perubahan realtime ke child (tanpa reload)
     onValue(ref(db, 'bridge'), (snap)=>{
       const obj = snap.val() || {};
       try{
@@ -210,6 +211,7 @@ window.addEventListener('message', (ev)=>{
       }catch(e){}
     });
 
+    // Terima permintaan & update dari child
     window.addEventListener('message', async (ev)=>{
       const d = ev.data || {};
       if(d.type === 'get_val' && d.key){
@@ -228,6 +230,7 @@ window.addEventListener('message', (ev)=>{
     if(user){ startBridge(); }
     else { signInAnonymously(auth).catch(()=>{}); }
   });
+  // Force login anonim awal
   signInAnonymously(auth).catch(()=>{});
 </script>
 <script>
@@ -241,11 +244,8 @@ async function loadEncrypted(name){
     const html=await decryptB64(b64.trim());
     let patched=html;
     const inj = buildChildInjection(name);
-    if (patched.includes("</body>")) patched = patched.replace("</body>", inj + "
-</body>");
-    else if (patched.includes("</html>")) patched = patched.replace("</html>", "
-" + inj + "
-</html>");
+    if (patched.includes("</body>")) patched = patched.replace("</body>", inj + "\n</body>");
+    else if (patched.includes("</html>")) patched = patched.replace("</html>", "\n" + inj + "\n</html>");
     else patched += inj;
 
     const frame=document.getElementById('viewer');
