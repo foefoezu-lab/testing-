@@ -3,38 +3,38 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TAKA ALLIANCE — GoldRain Realtime (Auth FINAL)</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<title>TAKA ALLIANCE — GoldRain (Firebase Realtime READY)</title>
+
 <style>
-  :root{ --gold:#ffd700; --gold-soft:#ffde6b; --panel:#0e0d0a; --ink:#0a0a0a; }
+  :root{ --gold:#ffd700; --gold-soft:#ffde6b; --panel:#0e0d0a; }
   *{box-sizing:border-box} html,body{height:100%}
   body{margin:0;background:#000;color:var(--gold);font-family:Poppins,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow:hidden;}
-  header{position:relative;z-index:5;text-align:center;padding:24px 16px 8px}
+  canvas#goldRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.65));}
+  header{position:relative;z-index:5;text-align:center;padding:24px 16px 8px;}
   header h1{margin:0;font-weight:800;letter-spacing:.06em;color:var(--gold-soft);text-shadow:0 0 18px rgba(255,215,0,.55),0 0 40px rgba(255,200,0,.25);}
-  header p{margin:6px 0 0;color:#d8bf66;opacity:.85;font-size:.95rem}
-  .nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:14px 10px 8px;position:relative;z-index:5}
-  .btn{background:rgba(255,215,0,.10);border:1px solid rgba(255,215,0,.45);color:var(--gold-soft);font-weight:600;padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s ease;box-shadow:0 0 12px rgba(255,215,0,.20) inset,0 0 6px rgba(255,215,0,.18)}
-  .btn:hover{background:rgba(255,215,0,.28);transform:translateY(-2px)}
-  .panel{position:relative;z-index:4;margin:10px auto 22px;width:min(1200px,96vw);background:linear-gradient(180deg,rgba(14,13,10,.96),rgba(8,7,5,.96));border:1px solid rgba(255,215,0,.20);border-radius:18px;box-shadow:0 0 0 1px rgba(255,215,0,.06) inset,0 40px 120px rgba(0,0,0,.6),0 0 60px rgba(255,215,0,.18);padding:18px 14px 20px}
-  #viewer{width:100%;height:72vh;border:1px solid rgba(255,215,0,.28);border-radius:14px;background:#0b0b0b}
-  footer{position:fixed;bottom:8px;width:100%;text-align:center;z-index:5;color:#d8bf66;font-size:.9rem}
-  #loginOverlay{position:fixed;inset:0;display:grid;place-items:center;z-index:9999;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,.84));backdrop-filter:saturate(120%) blur(2px)}
-  #loginCard{width:min(420px,92vw);padding:22px 20px 18px;border-radius:16px;background:linear-gradient(180deg,#14100a,#0f0d08);border:1px solid rgba(255,215,0,.18);color:#ffe8a6;box-shadow:0 26px 60px rgba(0,0,0,.65), 0 0 32px rgba(255,210,0,.14) inset}
-  #loginCard h2{margin:0 0 6px;color:var(--gold-soft);text-shadow:0 0 14px rgba(255,215,0,.35)}
-  #loginCard p{margin:2px 0 12px;color:#d9c88f;font-size:.95rem}
-  #loginCard input{width:100%;padding:12px 12px;margin:8px 0;border-radius:12px;background:#0e0c05;color:#fff9e8;border:1px solid #3b2a10;outline:none}
+  header p{margin:6px 0 0;color:#d8bf66;opacity:.85;font-size:.95rem;}
+  .nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:14px 10px 8px;position:relative;z-index:5;}
+  .btn{background:rgba(255,215,0,.10);border:1px solid rgba(255,215,0,.45);color:var(--gold-soft);font-weight:600;padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s ease;box-shadow:0 0 12px rgba(255,215,0,.20) inset,0 0 6px rgba(255,215,0,.18);}
+  .btn:hover{background:rgba(255,215,0,.28);transform:translateY(-2px);}
+  .panel{position:relative;z-index:4;margin:10px auto 22px;width:min(1200px,96vw);background:linear-gradient(180deg,rgba(14,13,10,.96),rgba(8,7,5,.96));border:1px solid rgba(255,215,0,.20);border-radius:18px;box-shadow:0 0 0 1px rgba(255,215,0,.06) inset,0 40px 120px rgba(0,0,0,.6),0 0 60px rgba(255,215,0,.18);padding:18px 14px 20px;}
+  #viewer{width:100%;height:72vh;border:1px solid rgba(255,215,0,.28);border-radius:14px;background:rgba(12,11,9,.98);box-shadow:inset 0 0 24px rgba(0,0,0,.55);}
+  footer{position:fixed;bottom:8px;width:100%;text-align:center;z-index:5;color:#d8bf66;font-size:.9rem;}
+  #loginOverlay{position:fixed;inset:0;display:grid;place-items:center;z-index:9999;background:linear-gradient(180deg,rgba(0,0,0,.65),rgba(0,0,0,.80));backdrop-filter:saturate(120%) blur(2px);}
+  #loginCard{width:min(420px,92vw);padding:22px 20px 18px;border-radius:16px;background:linear-gradient(180deg,#14100a,#0f0d08);border:1px solid rgba(255,215,0,.18);color:#ffe8a6;box-shadow:0 26px 60px rgba(0,0,0,.65),0 0 32px rgba(255,210,0,.14) inset;}
+  #loginCard h2{margin:0 0 6px;color:var(--gold-soft);text-shadow:0 0 14px rgba(255,215,0,.35);} #loginCard p{margin:2px 0 12px;color:#d9c88f;font-size:.95rem}
+  #loginCard input{width:100%;padding:12px 12px;margin:8px 0;border-radius:12px;background:#0e0c05;color:#fff9e8;border:1px solid #3b2a10;outline:none;}
   #loginCard .btn{width:100%;padding:12px;border-radius:12px;margin-top:6px}
   #loginStatus{min-height:18px;color:#ffb4b4;margin-top:8px;font-size:.9rem;text-align:center}
-  body.locked > *:not(#loginOverlay){display:none !important}
-  #goldRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.65))}
+  body.locked > *:not(#loginOverlay){display:none !important;}
 </style>
 </head>
 <body class="locked">
   <canvas id="goldRain"></canvas>
   <header>
     <h1>TAKA ALLIANCE</h1>
-    <p>GoldRain Master Edition — Firebase Realtime (Auth)</p>
+    <p>GoldRain Master Edition Dashboard</p>
   </header>
+
   <div class="nav">
     <button class="btn" onclick="loadEncrypted('instagram')">Instagram</button>
     <button class="btn" onclick="loadEncrypted('linkedin')">LinkedIn</button>
@@ -45,11 +45,15 @@
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
   </div>
+
   <div class="panel">
+    <!-- IMPORTANT: no sandbox so scripts & modules inside .enc can run -->
     <iframe id="viewer" allow="fullscreen; clipboard-read; clipboard-write; autoplay; encrypted-media" referrerpolicy="no-referrer"></iframe>
   </div>
+
   <footer>© 2025 TAKA ALLIANCE — GoldRain Master Edition</footer>
 
+  <!-- Login overlay -->
   <div id="loginOverlay" aria-hidden="false">
     <div id="loginCard" role="dialog" aria-label="CK44 Secure Login">
       <h2>Secure Access</h2>
@@ -62,7 +66,7 @@
   </div>
 
 <script>
-/* Anti-inspect */
+/* ===================== Anti-inspect ===================== */
 window.addEventListener('contextmenu', e=>e.preventDefault());
 window.addEventListener('keydown', e=>{
   const k=e.key.toUpperCase();
@@ -71,7 +75,7 @@ window.addEventListener('keydown', e=>{
   if(e.ctrlKey && ['U','S','P'].includes(k)) e.preventDefault();
 }, true);
 
-/* Login (panel) */
+/* ===================== Login ===================== */
 const USER='martinganteng', PASS='martinterkece', EXP_MIN=30;
 function valid(){ const t=Number(localStorage.getItem('ck44_exp')||0); return Date.now()<t; }
 function setOK(){ localStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); }
@@ -86,79 +90,56 @@ document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Ente
 document.addEventListener('DOMContentLoaded',()=>{ if(valid()) unlock(); else lock(''); });
 setInterval(()=>{ if(!valid()) lock('Sesi habis. Login ulang.'); }, 5000);
 
-/* Rain */
+/* ===================== GoldRain ===================== */
 const rain = document.getElementById('goldRain'); const ctx=rain.getContext('2d'); let P=[];
 function size(){ rain.width=innerWidth; rain.height=innerHeight; }
 function seed(){ P=[]; for(let i=0;i<140;i++){ P.push({x:Math.random()*rain.width,y:Math.random()*rain.height,s:Math.random()*2+0.3,v:0.4+Math.random()*1.2}); } }
-function draw(){ ctx.clearRect(0,0,rain.width,rain.height); ctx.fillStyle='#ffd700'; for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.y+=p.v; if(p.y>rain.height){ p.y=-5; p.x=Math.random()*rain.width; } } requestAnimationFrame(draw); }
-addEventListener('resize',()=>{ size(); seed(); }); size(); seed(); draw();
+function draw(){
+  ctx.clearRect(0,0,rain.width,rain.height);
+  ctx.fillStyle='#ffd700';
+  for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.y+=p.v; if(p.y>rain.height){ p.y=-5; p.x=Math.random()*rain.width; } }
+  requestAnimationFrame(draw);
+}
+addEventListener('resize',()=>{ size(); seed(); });
+size(); seed(); draw();
 
-/* AES-GCM helpers */
+/* ===================== AES‑GCM Decrypt + Loader ===================== */
 function b64ToBytes(b64){ const bin=atob(b64.trim()); const len=bin.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
-async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']); }
-async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data); return new TextDecoder().decode(new Uint8Array(plain)); }
-
-/* Child injection (checkbox sync + CSV; live updates) */
-function buildChildInjection(planner){
-  const code = `
-<script>(function(){
-  const PL='${'`+planner+`'}'; const NS='taka_planner_'+PL+'_';
-  function keyFor(cb,i){ try{ const p=cb.closest('.panel'); const b=p&&p.querySelector('.badge')?p.querySelector('.badge').textContent.trim():'no-badge'; return NS+b+'#'+i; }catch(e){ return NS+'#'+i; } }
-  function askParent(key){ try{ parent.postMessage({type:'get_val', key}, '*'); }catch(e){} }
-
-  window.addEventListener('message', ev=>{
-    const d=ev.data||{};
-    if(d.type==='set_val' && d.key && (d.value!==undefined)){
-      const boxes=[...document.querySelectorAll('input[type=checkbox]')];
-      const box=boxes.find(cb=>cb.dataset.ck44Key===d.key);
-      if(box){ const nv=(d.value==='1'||d.value===1||d.value===true); if(box.checked!==nv){ box.checked=nv; try{ localStorage.setItem(d.key, nv?'1':'0'); }catch(e){} } }
+async function importKey(pw,salt){
+  const enc=new TextEncoder();
+  const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']);
+}
+async function decryptB64(b64){
+  const buf=b64ToBytes(b64);
+  const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28, buf.length-16), tag=buf.slice(buf.length-16);
+  const full=new Uint8Array(data.length+tag.length); full.set(data,0); full.set(tag,data.length);
+  const key=await importKey('TAKAALLIANCE_2025', salt);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, full);
+  return new TextDecoder().decode(new Uint8Array(plain));
+}
+async function loadEncrypted(name){
+  const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
+  let b64=null;
+  for(const url of paths){
+    try{ const r=await fetch(url); if(r.ok){ b64=await r.text(); break; } }catch(e){}
+  }
+  if(!b64){ alert('❌ File tidak ditemukan di /assets atau /public/assets.'); return; }
+  try{
+    const html=await decryptB64(b64);
+    const frame=document.getElementById('viewer');
+    frame.removeAttribute('sandbox');
+    // prefer srcdoc to keep same-origin with blob less quirks
+    frame.srcdoc = html;
+    if(!('srcdoc' in frame)){ // fallback
+      const blob=new Blob([html],{type:'text/html'});
+      const url=URL.createObjectURL(blob);
+      frame.src=url;
     }
-  });
-
-  window.addEventListener('load', ()=>{
-    const boxes=[...document.querySelectorAll('input[type=checkbox]')];
-    boxes.forEach((cb,i)=>{
-      const k=keyFor(cb,i); cb.dataset.ck44Key=k; askParent(k);
-      if(!cb.dataset.bound){
-        cb.addEventListener('change', ()=>{
-          try{ parent.postMessage({type:'checkbox_update', key:k, value: !!cb.checked}, '*'); }catch(e){}
-          try{ localStorage.setItem(k, cb.checked?'1':'0'); }catch(e){}
-        });
-        cb.dataset.bound='1';
-      }
-      try{ const v=localStorage.getItem(k); if(v==='1') cb.checked=true; }catch(e){}
-    });
-
-    function buildCSV(){
-      const rows=[['Day','Slot','Caption','Prompt']];
-      const panels=document.querySelectorAll('.panel'); if(!panels.length) return null;
-      panels.forEach(p=>{
-        const b=(p.querySelector('.badge')&&p.querySelector('.badge').textContent)||'';
-        const m=b.match(/Day\s*(\d+)\s*—\s*(\w+)/); const d=m?m[1]:''; const s=m?m[2]:'';
-        const t=p.querySelectorAll('textarea'); const caption=t[0]?(t[0].value||'').trim():''; const prompt=t[1]?(t[1].value||'').trim():'';
-        rows.push([d,s,caption,prompt]);
-      });
-      return rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-    }
-    ([...document.querySelectorAll('button,a')]).forEach(btn=>{
-      if(/export\s*csv/i.test(btn.textContent||'') && !btn.dataset.csvBound){
-        btn.addEventListener('click', e=>{
-          e.preventDefault();
-          const csv=buildCSV(); if(!csv){ alert('Tidak menemukan data untuk diekspor.'); return; }
-          try{ parent.postMessage({type:'download_csv', filename:PL+'_planner.csv', content:csv}, '*'); }
-          catch(err){
-            try{ const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=PL+'_planner.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},400); }catch(e){ alert('Export CSV gagal'); }
-          }
-        });
-        btn.dataset.csvBound='1';
-      }
-    });
-  });
-})();<\/script>`;
-  return code;
+  }catch(e){ alert('❌ Gagal mendekripsi file'); }
 }
 
-/* CSV download bridge (parent) */
+/* ===================== Parent <-> Iframe Bridge ===================== */
 window.addEventListener('message', (ev)=>{
   const d = ev.data || {};
   if(d.type === 'download_csv'){
@@ -173,9 +154,10 @@ window.addEventListener('message', (ev)=>{
   }
 });
 </script>
+
+<!-- ===================== Firebase (Parent-level) ===================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
   import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -190,74 +172,34 @@ window.addEventListener('message', (ev)=>{
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
   const db = getDatabase(app);
 
+  // Bridge for child iframes that ask parent to read/write
   function cleanKey(k){ return encodeURIComponent(String(k||'').replace(/\//g,'_')); }
-  function iframeWin(){ return document.getElementById('viewer').contentWindow; }
 
-  function startBridge(){
-    // Push seluruh perubahan realtime ke child (tanpa reload)
-    onValue(ref(db, 'bridge'), (snap)=>{
-      const obj = snap.val() || {};
-      try{
-        const w = iframeWin();
-        if(!w) return;
-        for(const [k,v] of Object.entries(obj)){
-          w.postMessage({type:'set_val', key:k, value:(v===1||v==='1')?'1':'0'}, '*');
-          try{ localStorage.setItem(k, (v===1||v==='1')?'1':'0'); }catch(e){}
-        }
-      }catch(e){}
-    });
-
-    // Terima permintaan & update dari child
-    window.addEventListener('message', async (ev)=>{
-      const d = ev.data || {};
-      if(d.type === 'get_val' && d.key){
-        const snap = await get(child(ref(db), 'bridge/' + cleanKey(d.key)));
-        const v = snap.exists() ? snap.val() : (localStorage.getItem(d.key) || '0');
-        ev.source?.postMessage({type:'set_val', key:d.key, value:(v===1||v==='1')?'1':'0'}, '*');
-      }
-      if(d.type === 'checkbox_update' && d.key){
-        set(ref(db, 'bridge/' + cleanKey(d.key)), d.value ? 1 : 0).catch(()=>{});
-        try{ localStorage.setItem(d.key, d.value ? '1' : '0'); }catch(e){}
-      }
-    });
-  }
-
-  onAuthStateChanged(auth, (user)=>{
-    if(user){ startBridge(); }
-    else { signInAnonymously(auth).catch(()=>{}); }
+  window.addEventListener('message', async (ev)=>{
+    const d = ev.data || {};
+    // Child asks current value
+    if(d.type === 'get_val' && d.key){
+      const snap = await get(child(ref(db), 'bridge/' + cleanKey(d.key)));
+      const v = snap.exists() ? snap.val() : (localStorage.getItem(d.key) || '0');
+      ev.source?.postMessage({type:'set_val', key:d.key, value: (v===1||v==='1') ? '1':'0'}, '*');
+    }
+    // Child notifies update (write to Firebase + cache)
+    if(d.type === 'checkbox_update' && d.key){
+      const path = 'bridge/' + cleanKey(d.key);
+      set(ref(db, path), d.value ? 1 : 0).catch(()=>{});
+      try{ localStorage.setItem(d.key, d.value ? '1' : '0'); }catch(e){}
+    }
   });
-  // Force login anonim awal
-  signInAnonymously(auth).catch(()=>{});
-</script>
-<script>
-/* Loader: decrypt + inject + blob */
-async function loadEncrypted(name){
-  const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
-  let b64=null;
-  for(const url of paths){ try{ const r=await fetch(url); if(r.ok){ b64=await r.text(); break; } }catch(e){} }
-  if(!b64){ alert('❌ File tidak ditemukan: '+name); return; }
-  try{
-    const html=await decryptB64(b64.trim());
-    let patched=html;
-    const inj = buildChildInjection(name);
-    if (patched.includes("</body>")) patched = patched.replace("</body>", inj + "
-</body>");
-    else if (patched.includes("</html>")) patched = patched.replace("</html>", "
-" + inj + "
-</html>");
-    else patched += inj;
 
-    const frame=document.getElementById('viewer');
-    frame.removeAttribute('sandbox'); // allow scripts/modules inside child
-    const blob=new Blob([patched],{type:'text/html'});
-    const url=URL.createObjectURL(blob);
-    frame.src=url;
-    setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 5*60*1000);
-  }catch(e){ console.error(e); alert('❌ Gagal mendekripsi file: '+name); }
-}
+  // Optional: keep a minimal live mirror to localStorage for fast first paint
+  onValue(ref(db, 'bridge'), (snap)=>{
+    const obj = snap.val() || {};
+    for (const [k,v] of Object.entries(obj)){
+      try{ localStorage.setItem(k, (v===1||v==='1') ? '1' : '0'); }catch(e){}
+    }
+  });
 </script>
 </body>
 </html>
