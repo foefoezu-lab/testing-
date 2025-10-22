@@ -28,6 +28,19 @@
   body.locked > *:not(#loginOverlay){display:none !important}
   #goldRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.65))}
 </style>
+<!-- Added: Logout button styles (non-destructive) -->
+<style>
+  [data-logout-fixed]{display:none;}
+  body:not(.locked) [data-logout-fixed]{display:block;}
+  .btn-logout{
+    position:fixed; top:18px; right:18px; z-index:10000;
+    background:linear-gradient(90deg,#ffd700,#ffb300);
+    color:#000; font-weight:800; border:none; border-radius:12px;
+    padding:10px 18px; box-shadow:0 0 18px rgba(255,215,0,.5);
+    cursor:pointer; transition:transform .12s ease, filter .2s ease;
+  }
+  .btn-logout:hover{ filter:brightness(1.08); transform:scale(1.04); }
+</style>
 </head>
 <body class="locked">
   <canvas id="goldRain"></canvas>
@@ -35,6 +48,7 @@
     <h1>TAKA ALLIANCE — FIREBASE</h1>
     <p>GoldRain Master Edition — Realtime (Auth Anon + Session Login)</p>
   </header>
+  <button id="logoutBtn" class="btn-logout" data-logout-fixed>⚡ Logout</button>
   <div class="nav">
     <button class="btn" onclick="loadEncrypted('instagram')">Instagram</button>
     <button class="btn" onclick="loadEncrypted('linkedin')">LinkedIn</button>
@@ -62,7 +76,6 @@
   </div>
 
 <script>
-/* Anti-inspect */
 window.addEventListener('contextmenu', e=>e.preventDefault());
 window.addEventListener('keydown', e=>{
   const k=e.key.toUpperCase();
@@ -71,7 +84,6 @@ window.addEventListener('keydown', e=>{
   if(e.ctrlKey && ['U','S','P'].includes(k)) e.preventDefault();
 }, true);
 
-/* Login (sessionStorage + auto-logout 30 menit) */
 const USER='martinganteng', PASS='martinterkece', EXP_MIN=30;
 function valid(){ const t=Number(sessionStorage.getItem('ck44_exp')||0); return Date.now()<t && sessionStorage.getItem('ck44_logged_in')==='true'; }
 function setOK(){ sessionStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); sessionStorage.setItem('ck44_logged_in','true'); }
@@ -87,19 +99,16 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ if(!val
 document.addEventListener('DOMContentLoaded',()=>{ if(valid()) unlock(); else lock(''); });
 setInterval(()=>{ if(!valid()) lock('Sesi habis. Login ulang.'); }, 5000);
 
-/* GoldRain */
 const rain = document.getElementById('goldRain'); const ctx=rain.getContext('2d'); let P=[];
 function size(){ rain.width=innerWidth; rain.height=innerHeight; }
 function seed(){ P=[]; for(let i=0;i<140;i++){ P.push({x:Math.random()*rain.width,y:Math.random()*rain.height,s:Math.random()*2+0.3,v:0.4+Math.random()*1.2}); } }
 function draw(){ ctx.clearRect(0,0,rain.width,rain.height); ctx.fillStyle='#ffd700'; for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.y+=p.v; if(p.y>rain.height){ p.y=-5; p.x=Math.random()*rain.width; } } requestAnimationFrame(draw); }
 addEventListener('resize',()=>{ size(); seed(); }); size(); seed(); draw();
 
-/* AES‑GCM helpers */
 function b64ToBytes(b64){ const bin=atob(b64.trim()); const len=bin.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
 async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']); }
 async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data); return new TextDecoder().decode(new Uint8Array(plain)); }
 
-/* Child bridge injection (checkbox sync + CSV + live updates) */
 function buildChildInjection(planner){
   const code = `
 <script>(function(){
@@ -159,7 +168,6 @@ function buildChildInjection(planner){
   return code;
 }
 
-/* CSV download bridge (parent) */
 window.addEventListener('message', (ev)=>{
   const d = ev.data || {};
   if(d.type === 'download_csv'){
@@ -198,7 +206,6 @@ window.addEventListener('message', (ev)=>{
   function iframeWin(){ return document.getElementById('viewer').contentWindow; }
 
   function startBridge(){
-    // Push seluruh perubahan realtime ke child (tanpa reload)
     onValue(ref(db, 'bridge'), (snap)=>{
       const obj = snap.val() || {};
       try{
@@ -211,7 +218,6 @@ window.addEventListener('message', (ev)=>{
       }catch(e){}
     });
 
-    // Terima permintaan & update dari child
     window.addEventListener('message', async (ev)=>{
       const d = ev.data || {};
       if(d.type === 'get_val' && d.key){
@@ -230,11 +236,9 @@ window.addEventListener('message', (ev)=>{
     if(user){ startBridge(); }
     else { signInAnonymously(auth).catch(()=>{}); }
   });
-  // Force login anonim awal
   signInAnonymously(auth).catch(()=>{});
 </script>
 <script>
-/* Loader: decrypt + inject + blob */
 async function loadEncrypted(name){
   const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
   let b64=null;
@@ -249,13 +253,31 @@ async function loadEncrypted(name){
     else patched += inj;
 
     const frame=document.getElementById('viewer');
-    frame.removeAttribute('sandbox'); // allow scripts/modules inside child
+    frame.removeAttribute('sandbox');
     const blob=new Blob([patched],{type:'text/html'});
     const url=URL.createObjectURL(blob);
     frame.src=url;
     setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 5*60*1000);
   }catch(e){ console.error(e); alert('❌ Gagal mendekripsi file: '+name); }
 }
+</script>
+
+<!-- Logout module for Firebase v12 (non-destructive) -->
+<script type="module">
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  const btn = document.getElementById('logoutBtn');
+  if (btn) {
+    btn.addEventListener('click', async ()=>{
+      try {
+        sessionStorage.clear();
+        localStorage.clear();
+        const auth = getAuth();
+        await signOut(auth).catch(()=>{});
+      } catch(e){}
+      if (window.lock) window.lock('Kamu telah logout.');
+      setTimeout(()=>location.reload(), 600);
+    });
+  }
 </script>
 </body>
 </html>
