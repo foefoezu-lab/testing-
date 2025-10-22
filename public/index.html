@@ -3,43 +3,38 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TAKA ALLIANCE — GoldRain (Vercel Restore v5 • Firebase Realtime)</title>
+<title>TAKA ALLIANCE — GoldRain (Vercel Restore v6 • Firebase Realtime)</title>
 
-<!-- CSP kept permissive for single-file app -->
+<!-- CSP for single-file app + Firebase -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' blob: https://www.gstatic.com https://www.googleapis.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob: data: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self';">
 
-<!-- Fonts (match your Gold aesthetic) -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --gold: #ffd700;
-    --gold-soft:#ffde6b;
-    --ink:#0a0a0a;
-    --panel:#0f0b06;
-    --muted:#e8ddb6;
+    --gold:#ffd700; --gold-soft:#ffde6b; --ink:#0a0a0a; --panel:#0f0b06; --muted:#e8ddb6;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
+  *{box-sizing:border-box} html,body{height:100%}
   body{
     margin:0;
-    background:
-      radial-gradient(1200px 600px at 50% -10%, rgba(255,215,0,.13), transparent 60%),
-      radial-gradient(circle at center, #0b0b0b 0%, #000 100%);
+    background: radial-gradient(1200px 600px at 50% -10%, rgba(255,215,0,.13), transparent 60%),
+               radial-gradient(circle at center, #0b0b0b 0%, #000 100%);
     color:var(--gold);
     font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
     overflow:hidden;
   }
-  /* Gold rain */
+  /* GoldRain */
   canvas#goldRain{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:1;
-    filter: drop-shadow(0 0 6px rgba(255,215,0,.65));}
+    filter:drop-shadow(0 0 6px rgba(255,215,0,.65));}
 
+  /* Header */
   header{position:relative; z-index:5; text-align:center; padding:24px 16px 6px;}
   header h1{margin:0; font-weight:800; letter-spacing:.06em; color:var(--gold-soft);
     text-shadow:0 0 18px rgba(255,215,0,.55), 0 0 40px rgba(255,200,0,.25);}
   header p{margin:6px 0 0; color:#d8bf66; opacity:.9; font-size:.95rem;}
 
+  /* Toolbar */
   .nav{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; padding:14px 10px 8px; position:relative; z-index:5;}
   .btn{
     background:rgba(255,215,0,.10);
@@ -50,17 +45,18 @@
   }
   .btn:hover{ background:rgba(255,215,0,.28); transform:translateY(-2px); }
 
+  /* Panel */
   .panel{
     position:relative; z-index:4; margin:10px auto 22px; width:min(1200px,96vw);
     background:linear-gradient(180deg, rgba(14,13,10,.96), rgba(8,7,5,.96));
     border:1px solid rgba(255,215,0,.20); border-radius:18px;
-    box-shadow: 0 0 0 1px rgba(255,215,0,.06) inset, 0 40px 120px rgba(0,0,0,.6), 0 0 60px rgba(255,215,0,.18);
+    box-shadow:0 0 0 1px rgba(255,215,0,.06) inset, 0 40px 120px rgba(0,0,0,.6), 0 0 60px rgba(255,215,0,.18);
     padding:18px 14px 20px;
   }
   .panel::after{
     content:""; position:absolute; inset:auto 10% -40px 10%; height:80px; border-radius:50%;
-    background: radial-gradient(60% 100% at 50% 0%, rgba(255,215,0,.45), rgba(255,170,0,.08) 55%, transparent 70%);
-    filter: blur(18px); z-index:-1;
+    background:radial-gradient(60% 100% at 50% 0%, rgba(255,215,0,.45), rgba(255,170,0,.08) 55%, transparent 70%);
+    filter:blur(18px); z-index:-1;
   }
   #viewer{
     width:100%; height:72vh; border:1px solid rgba(255,215,0,.28);
@@ -71,7 +67,7 @@
   footer{ position:fixed; bottom:8px; width:100%; text-align:center; z-index:5;
           color:#d8bf66; font-size:.9rem; }
 
-  /* Login overlay */
+  /* Login */
   #loginOverlay{position:fixed; inset:0; display:grid; place-items:center; z-index:9999;
     background:linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.80)); backdrop-filter:saturate(120%) blur(2px);}
   #loginCard{
@@ -88,13 +84,24 @@
   #loginStatus{min-height:18px; color:#ffb4b4; margin-top:8px; font-size:.9rem; text-align:center}
   body.locked > *:not(#loginOverlay){ display:none !important; }
 
-  /* firebase status ribbon (only shown if no config) */
-  #fbWarn{
-    display:none; position:fixed; top:8px; right:8px; z-index:99999;
+  #fbWarn{ display:none; position:fixed; top:8px; right:8px; z-index:99999;
     background:#201a08; border:1px solid #5a420f; color:#ffe8a6; border-radius:10px;
-    padding:10px 12px; font-size:12px; box-shadow:0 8px 20px rgba(255,204,51,.2);
-  }
+    padding:10px 12px; font-size:12px; box-shadow:0 8px 20px rgba(255,204,51,.2); }
 </style>
+
+<!-- Anti-inspect (non-module, run ASAP) -->
+<script>
+  (function(){
+    function block(e){ e.preventDefault(); return false; }
+    window.addEventListener('contextmenu', block, {capture:true});
+    window.addEventListener('keydown', function(e){
+      var k=(e.key||'').toUpperCase();
+      if(k==='F12') return block(e);
+      if((e.ctrlKey||e.metaKey) && e.shiftKey && (k==='I' || k==='J' || k==='C')) return block(e);
+      if((e.ctrlKey||e.metaKey) && (k==='U' || k==='S' || k==='P')) return block(e);
+    }, true);
+  })();
+</script>
 </head>
 <body class="locked">
 <canvas id="goldRain"></canvas>
@@ -136,83 +143,66 @@
   </div>
 </div>
 
-<!-- Firebase SDK (modular) -->
+<div id="fbWarn">⚠️ Firebase config belum diset. Simpan status pakai localStorage sementara.</div>
+
+<!-- Firebase + App (module) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-  /* ====== Anti-inspect ====== */
-  window.addEventListener('contextmenu', e=>e.preventDefault());
-  window.addEventListener('keydown', e=>{
-    const k=e.key.toUpperCase();
-    if(k==='F12') e.preventDefault();
-    if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(k)) e.preventDefault();
-    if(e.ctrlKey && ['U','S','P'].includes(k)) e.preventDefault();
-  }, true);
-
-  /* ====== Login ====== */
-  const USER='martinganteng', PASS='martinterkece', EXP_MIN=120;
-  const SESS_KEY='ck44_exp_vercel_v5';
-  function valid(){ const t=Number(localStorage.getItem(SESS_KEY)||0); return Date.now()<t; }
-  function setOK(){ localStorage.setItem(SESS_KEY, String(Date.now()+EXP_MIN*60*1000)); }
+  /* Login */
+  const USER='martinganteng', PASS='martinterkece', EXP_MIN=180;
+  const SESS_KEY='ck44_exp_vercel_v6';
+  function valid(){ const t=Number(sessionStorage.getItem(SESS_KEY)||0); return Date.now()<t; }
+  function setOK(){ sessionStorage.setItem(SESS_KEY, String(Date.now()+EXP_MIN*60*1000)); localStorage.setItem(SESS_KEY, String(Date.now()+EXP_MIN*60*1000)); }
   function lock(msg){ const o=document.getElementById('loginOverlay'); o.style.display='grid'; o.setAttribute('aria-hidden','false'); document.body.classList.add('locked'); if(msg) document.getElementById('loginStatus').textContent=msg||''; }
   function unlock(){ document.getElementById('loginOverlay').style.display='none'; document.body.classList.remove('locked'); document.getElementById('loginStatus').textContent=''; }
-  document.getElementById('loginBtn').addEventListener('click',()=>{
+
+  const loginBtn = document.getElementById('loginBtn');
+  const passEl = document.getElementById('pass');
+  loginBtn.addEventListener('click',()=>{
     const u=document.getElementById('user').value.trim();
-    const p=document.getElementById('pass').value;
+    const p=passEl.value;
     if(u===USER && p===PASS){ setOK(); unlock(); } else { lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
   });
-  document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
-  document.addEventListener('DOMContentLoaded',()=>{ if(valid()) unlock(); else lock(''); });
+  passEl.addEventListener('keydown',e=>{ if(e.key==='Enter') loginBtn.click(); });
 
-  /* ====== GoldRain ====== */
+  if(valid()) unlock(); else lock('');
+
+  /* GoldRain */
   const rain = document.getElementById('goldRain'); const ctx=rain.getContext('2d'); let P=[];
   function size(){ rain.width=innerWidth; rain.height=innerHeight; }
   function seed(){ P=[]; for(let i=0;i<140;i++){ P.push({x:Math.random()*rain.width,y:Math.random()*rain.height,s:Math.random()*2+0.3,v:0.4+Math.random()*1.2}); } }
   function draw(){ ctx.clearRect(0,0,rain.width,rain.height); ctx.fillStyle='#ffd700'; for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.y+=p.v; if(p.y>rain.height){ p.y=-5; p.x=Math.random()*rain.width; } } requestAnimationFrame(draw); }
   addEventListener('resize',()=>{ size(); seed(); }); size(); seed(); draw();
 
-  /* ====== Crypto Decrypt (AES-GCM) ====== */
+  /* Crypto */
   function b64ToBytes(b64){ const bin=atob(b64.trim()); const len=bin.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
   async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']); }
   async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28, buf.length-16), tag=buf.slice(buf.length-16); const full=new Uint8Array(data.length+tag.length); full.set(data,0); full.set(tag,data.length); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, full); return new TextDecoder().decode(new Uint8Array(plain)); }
 
-  /* ====== Firebase init ====== */
-  const fbWarn = document.createElement('div');
-  fbWarn.id = 'fbWarn';
-  fbWarn.textContent = '⚠️ Firebase config belum diset. Simpan status pakai localStorage sementara.';
-  document.body.appendChild(fbWarn);
-
-  let app = null, db = null, fbReady=false;
-  // Expect user to define window.FIREBASE_CONFIG in a separate inline script or env-injected.
+  /* Firebase init */
+  let app=null, db=null, fbReady=false;
+  const fbWarn = document.getElementById('fbWarn');
   if (window.FIREBASE_CONFIG) {
     try{
       app = initializeApp(window.FIREBASE_CONFIG);
       db = getDatabase(app);
       fbReady = true;
-    }catch(e){
-      console.warn('Firebase init error:', e);
-      fbWarn.style.display='block';
-    }
+    }catch(e){ console.warn('Firebase init error:', e); fbWarn.style.display='block'; }
   } else {
     fbWarn.style.display='block';
   }
 
-  /* ====== Parent <-> Iframe Bridge with Firebase backend ====== */
-  // Current iframe + planner context registry
+  /* Bridge + Realtime */
   let currentFrame = null;
   let currentPlanner = null;
-  let unsub = null; // unsubscribe Firebase listener
-
-  // Cache last snapshot for fast replies
-  const stateCache = new Map(); // key => '0'|'1'
-
+  let unsub = null;
+  const stateCache = new Map();
   function fbPath(planner){ return 'plannerStates/'+planner; }
 
   async function handleGetVal(key){
-    // Prefer cache
     if (stateCache.has(key)) return stateCache.get(key);
-    // Try Firebase
     if (fbReady && db && currentPlanner){
       try{
         const snap = await get(child(ref(db), fbPath(currentPlanner)+'/'+key));
@@ -223,34 +213,28 @@
         }
       }catch(e){ console.warn('Firebase read error', e); }
     }
-    // Fallback to localStorage
     const v = localStorage.getItem(key) || '0';
     stateCache.set(key, v);
     return v;
   }
 
   async function handleSetVal(key, val){
-    stateCache.set(key, val ? '1':'0');
-    // mirror to LS
-    localStorage.setItem(key, val ? '1':'0');
-    // write to Firebase
+    const vs = val ? '1':'0';
+    stateCache.set(key, vs);
+    localStorage.setItem(key, vs);
     if (fbReady && db && currentPlanner){
-      try{
-        await set(ref(db, fbPath(currentPlanner)+'/'+key), val ? '1':'0');
-      }catch(e){ console.warn('Firebase write error', e); }
+      try{ await set(ref(db, fbPath(currentPlanner)+'/'+key), vs); }
+      catch(e){ console.warn('Firebase write error', e); }
     }
   }
 
-  // Listen to Firebase and forward updates to child (realtime multi-device)
   function subscribePlanner(planner){
     if (!fbReady || !db) return;
     if (unsub) { unsub(); unsub=null; }
     const r = ref(db, fbPath(planner));
     const off = onValue(r, (snap)=>{
       const data = snap.val() || {};
-      // Update cache
       Object.keys(data).forEach(k=> stateCache.set(k, String(data[k])));
-      // Broadcast to child so checkboxes reflect remote changes
       if (currentFrame && currentFrame.postMessage){
         Object.keys(data).forEach(k=>{
           currentFrame.postMessage({ type:'set_val', key:k, value:String(data[k]) }, '*');
@@ -260,7 +244,6 @@
     unsub = ()=>off();
   }
 
-  // Message bridge
   window.addEventListener('message', async (e)=>{
     const d = e.data || {};
     if (d.type === 'get_val'){
@@ -271,7 +254,7 @@
       await handleSetVal(d.key, !!d.value);
     }
     if (d.type === 'download_csv' && typeof d.content === 'string'){
-      const blob = new Blob([d.content], {type:'text/csv'});
+      const blob = new Blob([d.content], {type: 'text/csv'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = d.filename || (currentPlanner ? currentPlanner+'_planner.csv':'planner.csv');
@@ -279,25 +262,25 @@
     }
   });
 
-  /* ====== Inject helper into decrypted planner (no change to template visuals) ====== */
   function helperSource(name){
-    return "(function(){\\n"
-      +"const NS='taka_planner_"+'"+name+"'+"_';\\n"
-      +"function keyOf(cb){return cb.id||(cb.closest('.badge')?cb.closest('.badge').textContent.trim():cb.name||cb.outerHTML.slice(0,50));}\\n"
-      +"function bind(){\\n"
-      +" const all=[...document.querySelectorAll('input[type=checkbox]')];\\n"
-      +" window.addEventListener('message',ev=>{const d=ev.data||{}; if(d.type==='set_val'){ const m=all.find(cb=>(NS+keyOf(cb))===d.key); if(m) m.checked=(d.value==='1'); }});\\n"
-      +" all.forEach(cb=>{ const k=NS+keyOf(cb); parent.postMessage({type:'get_val', key:k}, '*'); cb.addEventListener('change',()=>parent.postMessage({type:'checkbox_update', key:k, value: cb.checked}, '*')); });\\n"
-      +" const probe=()=>{ const b=document.getElementById('exportCsvBtn')||document.querySelector('[data-export-csv]')||[...document.querySelectorAll('button,a')].find(x=>/export\\s*csv/i.test(x.textContent||'')); if(!b) return false; b.addEventListener('click',e=>{e.preventDefault(); const rows=[['Day','Slot','Caption','Prompt']]; const panels=document.querySelectorAll('.panel'); if(panels.length){ panels.forEach(p=>{ const badge=p.querySelector('.badge')?.textContent||''; const t=p.querySelectorAll('textarea'); rows.push([badge, t[0]?.value?.trim()||'', t[1]?.value?.trim()||'', '']); }); } else { const tas=[...document.querySelectorAll('textarea')]; for(let i=0;i<tas.length;i+=2){ rows.push(['', tas[i]?.value?.trim()||'', tas[i+1]?.value?.trim()||'', '']); } } const csv=rows.map(r=>r.map(v=>'\\"'+String(v).replace(/\\\"/g,'\\\"\\\"')+'\\"').join(',')).join('\\n'); parent.postMessage({type:'download_csv', filename: name+'_planner.csv', content: csv}, '*'); }); return true; }; if(!probe()){ const mo=new MutationObserver(()=>{ if(probe()) mo.disconnect(); }); mo.observe(document.documentElement,{childList:true,subtree:true}); }\\n"
-      +"}\\n"
-      +"window.addEventListener('load', bind, {once:true});\\n"
-      +"})();";
+    var code = '';
+    code += '(function(){\n';
+    code += ' const NS=\'taka_planner_\'+name+\'_\';\n';
+    code += ' function keyOf(cb){ return cb.id || (cb.closest(\\\'.badge\\\') ? cb.closest(\\\'.badge\\\').textContent.trim() : cb.name || cb.outerHTML.slice(0,50)); }\n';
+    code += ' function bind(){\n';
+    code += '  const all=[...document.querySelectorAll(\\\'input[type=checkbox]\\\')];\n';
+    code += '  window.addEventListener(\\\'message\\\',ev=>{const d=ev.data||{}; if(d.type===\\\'set_val\\\'){ const m=all.find(cb=>(NS+keyOf(cb))===d.key); if(m) m.checked=(d.value===\\\'1\\\'); }});\n';
+    code += '  all.forEach(cb=>{ const k=NS+keyOf(cb); parent.postMessage({type:\\\'get_val\\\', key:k}, \\\'*\\\'); cb.addEventListener(\\\'change\\\',()=>parent.postMessage({type:\\\'checkbox_update\\\', key:k, value: cb.checked}, \\\'*\\\')); });\n';
+    code += '  const probe=()=>{ const b=document.getElementById(\\\'exportCsvBtn\\\')||document.querySelector(\\\'[data-export-csv]\\\')||[...document.querySelectorAll(\\\'button,a\\\')].find(x=>/export\\s*csv/i.test(x.textContent||\\\'\\\')); if(!b) return false; b.addEventListener(\\\'click\\\',e=>{ e.preventDefault(); const rows=[[\\\'Day\\\',\\\'Slot\\\',\\\'Caption\\\',\\\'Prompt\\\']]; const panels=document.querySelectorAll(\\\'.panel\\\'); if(panels.length){ panels.forEach(p=>{ const badge=p.querySelector(\\\'.badge\\\')?.textContent||\\\'\\\'; const t=p.querySelectorAll(\\\'textarea\\\'); rows.push([badge, t[0]?.value?.trim()||\\\'\\\', t[1]?.value?.trim()||\\\'\\\', \\\'\\\']); }); } else { const tas=[...document.querySelectorAll(\\\'textarea\\\')]; for(let i=0;i<tas.length;i+=2){ rows.push([\\\'\\\', tas[i]?.value?.trim()||\\\'\\\', tas[i+1]?.value?.trim()||\\\'\\\', \\\'\\\']); } } const csv=rows.map(r=>r.map(v=>\\\'"\\\'+String(v).replace(/\"/g,\\\'\"\"\\\')+\\\'"\\\').join(\\\',\\\')).join(\\\'\\n\\\'); parent.postMessage({type:\\\'download_csv\\\', filename: name+\\\'_planner.csv\\\', content: csv}, \\\'*\\\'); }); return true; }; if(!probe()){ const mo=new MutationObserver(()=>{ if(probe()) mo.disconnect(); }); mo.observe(document.documentElement,{childList:true,subtree:true}); }\n';
+    code += ' }\n';
+    code += ' window.addEventListener(\\\'load\\\', bind, {once:true});\n';
+    code += '})();';
+    return code;
   }
 
-  /* ====== Loader (Vercel path + srcdoc + Firebase channel) ====== */
   async function loadEncrypted(name){
-    const url = `/assets/planners_encrypted/${name}.enc`;
-    let b64 = null;
+    const url = '/assets/planners_encrypted/' + name + '.enc';
+    let b64=null;
     try{
       const r = await fetch(url, {cache:'no-cache'});
       if (!r.ok) throw new Error('File tidak ditemukan');
@@ -305,32 +288,42 @@
     }catch(e){ alert('File terenkripsi tidak ditemukan: '+url); return; }
 
     try{
-      let html = await decryptB64(b64);
+      const html = await decryptB64(b64);
       const frame = document.getElementById('viewer');
-      currentPlanner = name;
-      stateCache.clear();
-      // Subscribe realtime
-      if (fbReady) subscribePlanner(name);
-
       frame.srcdoc = html;
+
+      // context for realtime
+      window.currentPlanner = name;
+
+      if (fbReady) {
+        if (window._unsubPlanner) window._unsubPlanner();
+        const r = ref(db, 'plannerStates/' + name);
+        const off = onValue(r, (snap)=>{
+          const data = snap.val() || {};
+          Object.keys(data).forEach(k=>{
+            frame.contentWindow && frame.contentWindow.postMessage({ type:'set_val', key:k, value:String(data[k]) }, '*');
+          });
+        });
+        window._unsubPlanner = ()=>off();
+      }
+
       frame.onload = ()=>{
-        currentFrame = frame.contentWindow;
         try{
           const doc = frame.contentDocument;
           const s = doc.createElement('script');
           s.type = 'text/javascript';
           s.text = helperSource(name);
           doc.documentElement.appendChild(s);
-        }catch(err){ alert('Inject helper gagal: '+(err.message||err)); }
+        }catch(err){ alert('Inject helper gagal: ' + (err.message||err)); }
       };
     }catch(e){ alert('Dekripsi gagal: '+ (e.message||e)); }
   }
 
-  // Expose to window for buttons
   window.loadEncrypted = loadEncrypted;
 </script>
 
-<!-- Optional: place your Firebase config below to enable realtime sync.
+<!-- Optional: set your Firebase config here -->
+<!--
 <script>
   window.FIREBASE_CONFIG = {
     apiKey: "YOUR_API_KEY",
@@ -339,8 +332,7 @@
     projectId: "YOUR_PROJECT",
     storageBucket: "YOUR_PROJECT.appspot.com",
     messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef",
-    databaseAuthVariableOverride: null
+    appId: "1:1234567890:web:abcdef"
   };
 </script>
 -->
