@@ -92,15 +92,20 @@ window.addEventListener('keydown', e=>{
 }, true);
 
 /* ===================== Session Login (30 menit) ===================== */
-const USER='martinganteng', PASS='martinterkuat', EXP_MIN=30;
+const STORED_USER_B64 = 'bWFydGluZ2FudGVuZw==', STORED_PASS_HASH = 'caa5a50b44fc5d46b2b541320090f47bcc385cb977690427d35e924e7853fa1e', EXP_MIN = 30;
 function valid(){ const t=Number(sessionStorage.getItem('ck44_exp')||0); return Date.now()<t && sessionStorage.getItem('ck44_logged_in')==='true'; }
 function setOK(){ sessionStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); sessionStorage.setItem('ck44_logged_in','true'); }
 function lock(msg){ const o=document.getElementById('loginOverlay'); o.style.display='grid'; o.setAttribute('aria-hidden','false'); document.body.classList.add('locked'); if(msg) document.getElementById('loginStatus').textContent=msg||''; }
 function unlock(){ document.getElementById('loginOverlay').style.display='none'; document.body.classList.remove('locked'); document.getElementById('loginStatus').textContent=''; }
-document.getElementById('loginBtn').addEventListener('click',()=>{
+async function sha256hex(str){ const enc=new TextEncoder(); const buf=await crypto.subtle.digest('SHA-256', enc.encode(str)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const u=document.getElementById('user').value.trim();
   const p=document.getElementById('pass').value;
-  if(u===USER && p===PASS){ setOK(); unlock(); } else { lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
+  const expectedUser = atob(STORED_USER_B64);
+  try{
+    const h = await sha256hex(p);
+    if(u===expectedUser && h===STORED_PASS_HASH){ setOK(); unlock(); } else { lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
+  }catch(e){ lock('Login error'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
 });
 document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ if(!valid()) lock('Sesi habis. Login ulang.'); } });
