@@ -92,7 +92,7 @@ window.addEventListener('keydown', e=>{
 }, true);
 
 /* ===================== Session Login (30 menit) ===================== */
-const USER='martinganteng', PASS='martinterkece', EXP_MIN=30;
+const USER='martinganteng', PASS='martinterkuat', EXP_MIN=30;
 function valid(){ const t=Number(sessionStorage.getItem('ck44_exp')||0); return Date.now()<t && sessionStorage.getItem('ck44_logged_in')==='true'; }
 function setOK(){ sessionStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); sessionStorage.setItem('ck44_logged_in','true'); }
 function lock(msg){ const o=document.getElementById('loginOverlay'); o.style.display='grid'; o.setAttribute('aria-hidden','false'); document.body.classList.add('locked'); if(msg) document.getElementById('loginStatus').textContent=msg||''; }
