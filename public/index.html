@@ -59,8 +59,6 @@
     <button class="btn" onclick="loadEncrypted('medium')">Medium</button>
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
-  <button class="btn" onclick="loadEncrypted('tumblr')">Tumblr</button>
-  <button class="btn" onclick="loadEncrypted('quora')">Quora</button>
   </div>
 
   <div class="panel">
@@ -118,7 +116,31 @@ addEventListener('resize',()=>{ size(); seed(); }); size(); seed(); draw();
 function b64ToBytes(b64){ const bin=atob(b64.trim()); const len=bin.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
 async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']); }
 async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data); return new TextDecoder().decode(new Uint8Array(plain)); }
-</script>
+
+// --- Secured client-side login (no plaintext credentials) ---
+// Stored username (base64) and password hash (SHA-256 hex)
+const STORED_USER_B64 = "bWFydGluZ2FudGVuZw==";
+const STORED_PASS_HASH = "caa5a50b44fc5d46b2b541320090f47bcc385cb977690427d35e924e7853fa1e";
+
+// Helper: compute SHA-256 hex of a string
+async function sha256hex(str){
+  const enc = new TextEncoder();
+  const data = enc.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  const bytes = new Uint8Array(hash);
+  return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// Replace original login handler to use hashed comparison
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const u=document.getElementById('user').value.trim();
+  const p=document.getElementById('pass').value;
+  const expectedUser = atob(STORED_USER_B64);
+  const h = await sha256hex(p);
+  if(u===expectedUser && h===STORED_PASS_HASH){ setOK(); unlock(); }
+  else { lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
+});
+
 
 <!-- ===================== Firebase Bridge (v12) ===================== -->
 <script type="module">
