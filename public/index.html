@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TAKA ALLIANCE — FIREBASE (Secure)</title>
+<title>TAKA ALLIANCE — FIREBASE</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root{ --gold:#ffd700; --gold-soft:#ffde6b; --panel:#0e0d0a; --ink:#0a0a0a; }
@@ -27,6 +27,7 @@
   #loginStatus{min-height:18px;color:#ffb4b4;margin-top:8px;font-size:.9rem;text-align:center}
   body.locked > *:not(#loginOverlay){display:none !important}
   #goldRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.65))}
+  /* Logout button */
   [data-logout-fixed]{display:none;}
   body:not(.locked) [data-logout-fixed]{display:block;}
   .btn-logout{
@@ -46,6 +47,7 @@
     <p>GoldRain Master Edition — Realtime (Auth Anon + Session Login)</p>
   </header>
 
+  <!-- Logout muncul hanya saat unlocked -->
   <button id="logoutBtn" class="btn-logout" data-logout-fixed>⚡ Logout</button>
 
   <div class="nav">
@@ -57,8 +59,8 @@
     <button class="btn" onclick="loadEncrypted('medium')">Medium</button>
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
-    <button class="btn" onclick="loadEncrypted('tumblr')">Tumblr</button>
-    <button class="btn" onclick="loadEncrypted('quora')">Quora</button>
+  <button class="btn" onclick="loadEncrypted('tumblr')">Tumblr</button>
+  <button class="btn" onclick="loadEncrypted('quora')">Quora</button>
   </div>
 
   <div class="panel">
@@ -67,6 +69,7 @@
 
   <footer>© 2025 TAKA ALLIANCE — GoldRain Master Edition</footer>
 
+  <!-- Login overlay -->
   <div id="loginOverlay" aria-hidden="false">
     <div id="loginCard" role="dialog" aria-label="CK44 Secure Login">
       <h2>Secure Access</h2>
@@ -89,11 +92,17 @@ window.addEventListener('keydown', e=>{
 }, true);
 
 /* ===================== Session Login (30 menit) ===================== */
-const EXP_MIN=30;
+const USER='martinganteng', PASS='martinterkece', EXP_MIN=30;
 function valid(){ const t=Number(sessionStorage.getItem('ck44_exp')||0); return Date.now()<t && sessionStorage.getItem('ck44_logged_in')==='true'; }
 function setOK(){ sessionStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); sessionStorage.setItem('ck44_logged_in','true'); }
 function lock(msg){ const o=document.getElementById('loginOverlay'); o.style.display='grid'; o.setAttribute('aria-hidden','false'); document.body.classList.add('locked'); if(msg) document.getElementById('loginStatus').textContent=msg||''; }
 function unlock(){ document.getElementById('loginOverlay').style.display='none'; document.body.classList.remove('locked'); document.getElementById('loginStatus').textContent=''; }
+document.getElementById('loginBtn').addEventListener('click',()=>{
+  const u=document.getElementById('user').value.trim();
+  const p=document.getElementById('pass').value;
+  if(u===USER && p===PASS){ setOK(); unlock(); } else { lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
+});
+document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ if(!valid()) lock('Sesi habis. Login ulang.'); } });
 document.addEventListener('DOMContentLoaded',()=>{ if(valid()) unlock(); else lock(''); });
 setInterval(()=>{ if(!valid()) lock('Sesi habis. Login ulang.'); }, 5000);
@@ -111,6 +120,7 @@ async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await 
 async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data); return new TextDecoder().decode(new Uint8Array(plain)); }
 </script>
 
+<!-- ===================== Firebase Bridge (v12) ===================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
@@ -131,6 +141,7 @@ async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  // ===== Auth bootstrap (write menunggu login agar tidak permission_denied) =====
   let authReady = new Promise(resolve => {
     onAuthStateChanged(auth, (user)=>{
       if(user){ resolve(user); }
@@ -138,16 +149,20 @@ async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(
     });
   });
 
+  // ===== Helper path & safe write =====
   function cleanKey(k){ return encodeURIComponent(String(k||'').replace(/\//g,'_')); }
   async function safeSet(path, value){
     try{
-      await authReady;
+      await authReady; // tunggu login anon
       await set(ref(db, path), value);
     }catch(e){
+      console.warn('Firebase set failed at', path, e?.code||e);
+      // fallback: simpan lokal agar UI tetap konsisten
       try{ localStorage.setItem(path, (value===1||value==='1'||value===true)?'1':'0'); }catch(_){}
     }
   }
 
+  // ===== DB -> child (iframe) =====
   function iframeWin(){ return document.getElementById('viewer')?.contentWindow; }
   onValue(ref(db, 'bridge'), (snap)=>{
     const obj = snap.val() || {};
@@ -160,6 +175,7 @@ async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(
     }catch(e){}
   });
 
+  // ===== child request -> DB & CSV download =====
   window.addEventListener('message', async (ev)=>{
     const d = ev.data || {};
     if(d.type === 'get_val' && d.key){
@@ -188,6 +204,7 @@ async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(
     }
   });
 
+  // ===== Logout (Firebase + session) =====
   document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
     try{ await signOut(auth); }catch(_){}
     sessionStorage.clear(); localStorage.clear();
@@ -196,44 +213,68 @@ async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(
   });
 </script>
 
-<!-- Secure Login (SHA-256) -->
 <script>
-const STORED_USER_B64 = "bWFydGluZ2FudGVuZw=="; // "martinganteng"
-const STORED_PASS_HASH = "caa5a50b44fc5d46b2b541320090f47bcc385cb977690427d35e924e7853fa1e"; // sha256("martinterkuat")
-async function sha256hex(str){ const enc=new TextEncoder(); const buf=await crypto.subtle.digest("SHA-256", enc.encode(str)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join(""); }
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  const u=document.getElementById('user').value.trim();
-  const p=document.getElementById('pass').value;
-  const expectedUser=atob(STORED_USER_B64);
-  const h=await sha256hex(p);
-  if(u===expectedUser && h===STORED_PASS_HASH){ setOK(); unlock(); }
-  else{ lock('Login gagal — coba lagi.'); setTimeout(()=>document.getElementById('loginStatus').textContent='',2200); }
-});
-</script>
-
-<!-- Loader & Bridge Injection -->
-<script>
+/* ===================== Inject child (planner) bridge ===================== */
 function buildChildInjection(planner){
   const code = `
 <script>(function(){
-  const PL='${planner}';
+  const PL='${'`+planner+`'}'; const NS='taka_planner_'+PL+'_';
+  function keyFor(cb,i){ try{ const p=cb.closest('.panel'); const b=p&&p.querySelector('.badge')?p.querySelector('.badge').textContent.trim():'no-badge'; return NS+b+'#'+i; }catch(e){ return NS+'#'+i; } }
+  function askParent(key){ try{ parent.postMessage({type:'get_val', key}, '*'); }catch(e){} }
+
   window.addEventListener('message', ev=>{
-    const d = ev.data || {};
-    if (d.type === 'set_val' && d.key && (d.value !== undefined)) {
-      const el = document.querySelector('[data-key="' + d.key + '"]');
-      if (el) {
-        const nv = (d.value === '1' || d.value == 1 || d.value === true);
-        if (el.checked !== undefined) { el.checked = nv; }
-        el.setAttribute('data-val', nv ? '1' : '0');
-      }
+    const d=ev.data||{};
+    if(d.type==='set_val' && d.key && (d.value!==undefined)){
+      const boxes=[...document.querySelectorAll('input[type=checkbox]')];
+      const box=boxes.find(cb=>cb.dataset.ck44Key===d.key);
+      if(box){ const nv=(d.value==='1'||d.value===1||d.value===true); if(box.checked!==nv){ box.checked=nv; try{ localStorage.setItem(d.key, nv?'1':'0'); }catch(e){} } }
     }
+  });
+
+  window.addEventListener('load', ()=>{
+    const boxes=[...document.querySelectorAll('input[type=checkbox]')];
+    boxes.forEach((cb,i)=>{
+      const k=keyFor(cb,i); cb.dataset.ck44Key=k; askParent(k);
+      if(!cb.dataset.bound){
+        cb.addEventListener('change', ()=>{
+          try{ parent.postMessage({type:'checkbox_update', key:k, value: !!cb.checked}, '*'); }catch(e){}
+          try{ localStorage.setItem(k, cb.checked?'1':'0'); }catch(e){};
+        });
+        cb.dataset.bound='1';
+      }
+      try{ const v=localStorage.getItem(k); if(v==='1') cb.checked=true; }catch(e){}
+    });
+
+    function buildCSV(){
+      const rows=[['Day','Slot','Caption','Prompt']];
+      const panels=document.querySelectorAll('.panel'); if(!panels.length) return null;
+      panels.forEach(p=>{
+        const b=(p.querySelector('.badge')&&p.querySelector('.badge').textContent)||'';
+        const m=b.match(/Day\\s*(\\d+)\\s*—\\s*(\\w+)/); const d=m?m[1]:''; const s=m?m[2]:'';
+        const t=p.querySelectorAll('textarea'); const caption=t[0]?(t[0].value||'').trim():''; const prompt=t[1]?(t[1].value||'').trim():'';
+        rows.push([d,s,caption,prompt]);
+      });
+      return rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\n');
+    }
+    ([...document.querySelectorAll('button,a')]).forEach(btn=>{
+      if(/export\\s*csv/i.test(btn.textContent||'') && !btn.dataset.csvBound){
+        btn.addEventListener('click', e=>{
+          e.preventDefault();
+          const csv=buildCSV(); if(!csv){ alert('Tidak menemukan data untuk diekspor.'); return; }
+          try{ parent.postMessage({type:'download_csv', filename:PL+'_planner.csv', content:csv}, '*'); }
+          catch(err){
+            try{ const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=PL+'_planner.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},400); }catch(e){ alert('Export CSV gagal'); }
+          }
+        });
+        btn.dataset.csvBound='1';
+      }
+    });
   });
 })();<\/script>`;
   return code;
 }
-</script>
 
-
+/* ===================== Loader: decrypt + inject + blob ===================== */
 async function loadEncrypted(name){
   const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
   let b64=null;
@@ -243,14 +284,12 @@ async function loadEncrypted(name){
     const html=await decryptB64(b64.trim());
     let patched=html;
     const inj = buildChildInjection(name);
-    if (patched.includes("</body>")) patched = patched.replace("</body>", inj + "
-</body>");
-    else if (patched.includes("</html>")) patched = patched.replace("</html>", "
-" + inj + "
-</html>");
+    if (patched.includes("</body>")) patched = patched.replace("</body>", inj + "\n</body>");
+    else if (patched.includes("</html>")) patched = patched.replace("</html>", "\n" + inj + "\n</html>");
     else patched += inj;
+
     const frame=document.getElementById('viewer');
-    frame.removeAttribute('sandbox');
+    frame.removeAttribute('sandbox'); // allow scripts/modules inside child
     const blob=new Blob([patched],{type:'text/html'});
     const url=URL.createObjectURL(blob);
     frame.src=url;
