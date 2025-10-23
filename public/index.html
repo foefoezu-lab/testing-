@@ -216,17 +216,23 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
 function buildChildInjection(planner){
   const code = `
 <script>(function(){
-  const PL='`+"${'${planner}'}"+`';
+  const PL='${planner}';
   window.addEventListener('message', ev=>{
-    const d=ev.data||{};
-    if(d.type==='set_val' && d.key && (d.value!==undefined)){
-      const el=document.querySelector('[data-key="'+d.key+'"]');
-      if(el){ const nv=(d.value==='1'||d.value===1||d.value===true); if(el.checked!==undefined){ el.checked=nv; } el.setAttribute('data-val', nv?'1':'0'); }
+    const d = ev.data || {};
+    if (d.type === 'set_val' && d.key && (d.value !== undefined)) {
+      const el = document.querySelector('[data-key="' + d.key + '"]');
+      if (el) {
+        const nv = (d.value === '1' || d.value == 1 || d.value === true);
+        if (el.checked !== undefined) { el.checked = nv; }
+        el.setAttribute('data-val', nv ? '1' : '0');
+      }
     }
   });
 })();<\/script>`;
   return code;
 }
+</script>
+
 
 async function loadEncrypted(name){
   const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
