@@ -27,9 +27,7 @@
   #loginStatus{min-height:18px;color:#ffb4b4;margin-top:8px;font-size:.9rem;text-align:center}
   body.locked > *:not(#loginOverlay){display:none !important}
   #goldRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.65))}
-</style>
-<!-- Added: Logout button styles (non-destructive) -->
-<style>
+  /* Logout button */
   [data-logout-fixed]{display:none;}
   body:not(.locked) [data-logout-fixed]{display:block;}
   .btn-logout{
@@ -48,7 +46,10 @@
     <h1>TAKA ALLIANCE — FIREBASE</h1>
     <p>GoldRain Master Edition — Realtime (Auth Anon + Session Login)</p>
   </header>
+
+  <!-- Logout muncul hanya saat unlocked -->
   <button id="logoutBtn" class="btn-logout" data-logout-fixed>⚡ Logout</button>
+
   <div class="nav">
     <button class="btn" onclick="loadEncrypted('instagram')">Instagram</button>
     <button class="btn" onclick="loadEncrypted('linkedin')">LinkedIn</button>
@@ -59,11 +60,14 @@
     <button class="btn" onclick="loadEncrypted('x')">X (Twitter)</button>
     <button class="btn" onclick="loadEncrypted('youtube')">YouTube</button>
   </div>
+
   <div class="panel">
     <iframe id="viewer" allow="fullscreen; clipboard-read; clipboard-write; autoplay; encrypted-media" referrerpolicy="no-referrer"></iframe>
   </div>
+
   <footer>© 2025 TAKA ALLIANCE — GoldRain Master Edition</footer>
 
+  <!-- Login overlay -->
   <div id="loginOverlay" aria-hidden="false">
     <div id="loginCard" role="dialog" aria-label="CK44 Secure Login">
       <h2>Secure Access</h2>
@@ -76,14 +80,16 @@
   </div>
 
 <script>
+/* ===================== Anti-inspect ===================== */
 window.addEventListener('contextmenu', e=>e.preventDefault());
 window.addEventListener('keydown', e=>{
-  const k=e.key.toUpperCase();
+  const k=(e.key||'').toUpperCase();
   if(k==='F12') e.preventDefault();
   if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(k)) e.preventDefault();
   if(e.ctrlKey && ['U','S','P'].includes(k)) e.preventDefault();
 }, true);
 
+/* ===================== Session Login (30 menit) ===================== */
 const USER='martinganteng', PASS='martinterkece', EXP_MIN=30;
 function valid(){ const t=Number(sessionStorage.getItem('ck44_exp')||0); return Date.now()<t && sessionStorage.getItem('ck44_logged_in')==='true'; }
 function setOK(){ sessionStorage.setItem('ck44_exp', String(Date.now()+EXP_MIN*60*1000)); sessionStorage.setItem('ck44_logged_in','true'); }
@@ -99,16 +105,114 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ if(!val
 document.addEventListener('DOMContentLoaded',()=>{ if(valid()) unlock(); else lock(''); });
 setInterval(()=>{ if(!valid()) lock('Sesi habis. Login ulang.'); }, 5000);
 
+/* ===================== GoldRain BG ===================== */
 const rain = document.getElementById('goldRain'); const ctx=rain.getContext('2d'); let P=[];
 function size(){ rain.width=innerWidth; rain.height=innerHeight; }
 function seed(){ P=[]; for(let i=0;i<140;i++){ P.push({x:Math.random()*rain.width,y:Math.random()*rain.height,s:Math.random()*2+0.3,v:0.4+Math.random()*1.2}); } }
 function draw(){ ctx.clearRect(0,0,rain.width,rain.height); ctx.fillStyle='#ffd700'; for(const p of P){ ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.y+=p.v; if(p.y>rain.height){ p.y=-5; p.x=Math.random()*rain.width; } } requestAnimationFrame(draw); }
 addEventListener('resize',()=>{ size(); seed(); }); size(); seed(); draw();
 
+/* ===================== AES-GCM decrypt helpers ===================== */
 function b64ToBytes(b64){ const bin=atob(b64.trim()); const len=bin.length; const bytes=new Uint8Array(len); for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes; }
 async function importKey(pw,salt){ const enc=new TextEncoder(); const mat=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, mat, {name:'AES-GCM',length:256}, false, ['decrypt']); }
 async function decryptB64(b64){ const buf=b64ToBytes(b64); const salt=buf.slice(0,16), iv=buf.slice(16,28), data=buf.slice(28); const key=await importKey('TAKAALLIANCE_2025', salt); const plain=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data); return new TextDecoder().decode(new Uint8Array(plain)); }
+</script>
 
+<!-- ===================== Firebase Bridge (v12) ===================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmog9ZyeL6_95xTnld0SLcuy5ZycspZZo",
+    authDomain: "taka-alliance.firebaseapp.com",
+    databaseURL: "https://taka-alliance-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "taka-alliance",
+    storageBucket: "taka-alliance.appspot.com",
+    messagingSenderId: "1056890285843",
+    appId: "1:1056890285843:web:a840634f72548f1350f4e6",
+    measurementId: "G-65ZQJ7DKHF"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // ===== Auth bootstrap (write menunggu login agar tidak permission_denied) =====
+  let authReady = new Promise(resolve => {
+    onAuthStateChanged(auth, (user)=>{
+      if(user){ resolve(user); }
+      else { signInAnonymously(auth).catch(()=>{}); }
+    });
+  });
+
+  // ===== Helper path & safe write =====
+  function cleanKey(k){ return encodeURIComponent(String(k||'').replace(/\//g,'_')); }
+  async function safeSet(path, value){
+    try{
+      await authReady; // tunggu login anon
+      await set(ref(db, path), value);
+    }catch(e){
+      console.warn('Firebase set failed at', path, e?.code||e);
+      // fallback: simpan lokal agar UI tetap konsisten
+      try{ localStorage.setItem(path, (value===1||value==='1'||value===true)?'1':'0'); }catch(_){}
+    }
+  }
+
+  // ===== DB -> child (iframe) =====
+  function iframeWin(){ return document.getElementById('viewer')?.contentWindow; }
+  onValue(ref(db, 'bridge'), (snap)=>{
+    const obj = snap.val() || {};
+    try{
+      const w = iframeWin(); if(!w) return;
+      for(const [k,v] of Object.entries(obj)){
+        w.postMessage({type:'set_val', key:k, value:(v===1||v==='1')?'1':'0'}, '*');
+        try{ localStorage.setItem(k, (v===1||v==='1')?'1':'0'); }catch(e){}
+      }
+    }catch(e){}
+  });
+
+  // ===== child request -> DB & CSV download =====
+  window.addEventListener('message', async (ev)=>{
+    const d = ev.data || {};
+    if(d.type === 'get_val' && d.key){
+      await authReady;
+      try{
+        const snap = await get(child(ref(db), 'bridge/'+cleanKey(d.key)));
+        const v = snap.exists() ? snap.val() : (localStorage.getItem(d.key) || '0');
+        ev.source?.postMessage({type:'set_val', key:d.key, value:(v===1||v==='1')?'1':'0'}, '*');
+      }catch(e){
+        const v = (localStorage.getItem(d.key) || '0');
+        ev.source?.postMessage({type:'set_val', key:d.key, value:v}, '*');
+      }
+    }
+    if(d.type === 'checkbox_update' && d.key){
+      safeSet('bridge/'+cleanKey(d.key), d.value ? 1 : 0);
+    }
+    if(d.type === 'download_csv'){
+      try{
+        const blob = new Blob([d.content||''], {type:'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = d.filename || 'planner.csv';
+        document.body.appendChild(a); a.click();
+        setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+      }catch(e){ alert('CSV download failed'); }
+    }
+  });
+
+  // ===== Logout (Firebase + session) =====
+  document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
+    try{ await signOut(auth); }catch(_){}
+    sessionStorage.clear(); localStorage.clear();
+    if (window.lock) window.lock('Kamu telah logout.');
+    setTimeout(()=>location.reload(), 600);
+  });
+</script>
+
+<script>
+/* ===================== Inject child (planner) bridge ===================== */
 function buildChildInjection(planner){
   const code = `
 <script>(function(){
@@ -132,7 +236,7 @@ function buildChildInjection(planner){
       if(!cb.dataset.bound){
         cb.addEventListener('change', ()=>{
           try{ parent.postMessage({type:'checkbox_update', key:k, value: !!cb.checked}, '*'); }catch(e){}
-          try{ localStorage.setItem(k, cb.checked?'1':'0'); }catch(e){}
+          try{ localStorage.setItem(k, cb.checked?'1':'0'); }catch(e){};
         });
         cb.dataset.bound='1';
       }
@@ -144,14 +248,14 @@ function buildChildInjection(planner){
       const panels=document.querySelectorAll('.panel'); if(!panels.length) return null;
       panels.forEach(p=>{
         const b=(p.querySelector('.badge')&&p.querySelector('.badge').textContent)||'';
-        const m=b.match(/Day\s*(\d+)\s*—\s*(\w+)/); const d=m?m[1]:''; const s=m?m[2]:'';
+        const m=b.match(/Day\\s*(\\d+)\\s*—\\s*(\\w+)/); const d=m?m[1]:''; const s=m?m[2]:'';
         const t=p.querySelectorAll('textarea'); const caption=t[0]?(t[0].value||'').trim():''; const prompt=t[1]?(t[1].value||'').trim():'';
         rows.push([d,s,caption,prompt]);
       });
-      return rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+      return rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\n');
     }
     ([...document.querySelectorAll('button,a')]).forEach(btn=>{
-      if(/export\s*csv/i.test(btn.textContent||'') && !btn.dataset.csvBound){
+      if(/export\\s*csv/i.test(btn.textContent||'') && !btn.dataset.csvBound){
         btn.addEventListener('click', e=>{
           e.preventDefault();
           const csv=buildCSV(); if(!csv){ alert('Tidak menemukan data untuk diekspor.'); return; }
@@ -168,77 +272,7 @@ function buildChildInjection(planner){
   return code;
 }
 
-window.addEventListener('message', (ev)=>{
-  const d = ev.data || {};
-  if(d.type === 'download_csv'){
-    try{
-      const blob = new Blob([d.content||''], {type:'text/csv'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = d.filename || 'planner.csv';
-      document.body.appendChild(a); a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
-    }catch(e){ alert('CSV download failed'); }
-  }
-});
-</script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-  import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBmog9ZyeL6_95xTnld0SLcuy5ZycspZZo",
-    authDomain: "taka-alliance.firebaseapp.com",
-    databaseURL: "https://taka-alliance-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "taka-alliance",
-    storageBucket: "taka-alliance.appspot.com",
-    messagingSenderId: "1056890285843",
-    appId: "1:1056890285843:web:a840634f72548f1350f4e6",
-    measurementId: "G-65ZQJ7DKHF"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
-
-  function cleanKey(k){ return encodeURIComponent(String(k||'').replace(/\//g,'_')); }
-  function iframeWin(){ return document.getElementById('viewer').contentWindow; }
-
-  function startBridge(){
-    onValue(ref(db, 'bridge'), (snap)=>{
-      const obj = snap.val() || {};
-      try{
-        const w = iframeWin();
-        if(!w) return;
-        for(const [k,v] of Object.entries(obj)){
-          w.postMessage({type:'set_val', key:k, value:(v===1||v==='1')?'1':'0'}, '*');
-          try{ localStorage.setItem(k, (v===1||v==='1')?'1':'0'); }catch(e){}
-        }
-      }catch(e){}
-    });
-
-    window.addEventListener('message', async (ev)=>{
-      const d = ev.data || {};
-      if(d.type === 'get_val' && d.key){
-        const snap = await get(child(ref(db), 'bridge/' + cleanKey(d.key)));
-        const v = snap.exists() ? snap.val() : (localStorage.getItem(d.key) || '0');
-        ev.source?.postMessage({type:'set_val', key:d.key, value:(v===1||v==='1')?'1':'0'}, '*');
-      }
-      if(d.type === 'checkbox_update' && d.key){
-        set(ref(db, 'bridge/' + cleanKey(d.key)), d.value ? 1 : 0).catch(()=>{});
-        try{ localStorage.setItem(d.key, d.value ? '1' : '0'); }catch(e){}
-      }
-    });
-  }
-
-  onAuthStateChanged(auth, (user)=>{
-    if(user){ startBridge(); }
-    else { signInAnonymously(auth).catch(()=>{}); }
-  });
-  signInAnonymously(auth).catch(()=>{});
-</script>
-<script>
+/* ===================== Loader: decrypt + inject + blob ===================== */
 async function loadEncrypted(name){
   const paths=[ `/assets/planners_encrypted/${name}.enc`, `/public/assets/planners_encrypted/${name}.enc` ];
   let b64=null;
@@ -253,31 +287,13 @@ async function loadEncrypted(name){
     else patched += inj;
 
     const frame=document.getElementById('viewer');
-    frame.removeAttribute('sandbox');
+    frame.removeAttribute('sandbox'); // allow scripts/modules inside child
     const blob=new Blob([patched],{type:'text/html'});
     const url=URL.createObjectURL(blob);
     frame.src=url;
     setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 5*60*1000);
   }catch(e){ console.error(e); alert('❌ Gagal mendekripsi file: '+name); }
 }
-</script>
-
-<!-- Logout module for Firebase v12 (non-destructive) -->
-<script type="module">
-  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-  const btn = document.getElementById('logoutBtn');
-  if (btn) {
-    btn.addEventListener('click', async ()=>{
-      try {
-        sessionStorage.clear();
-        localStorage.clear();
-        const auth = getAuth();
-        await signOut(auth).catch(()=>{});
-      } catch(e){}
-      if (window.lock) window.lock('Kamu telah logout.');
-      setTimeout(()=>location.reload(), 600);
-    });
-  }
 </script>
 </body>
 </html>
